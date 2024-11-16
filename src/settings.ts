@@ -7,6 +7,10 @@ export const SETTINGS = {
         POSTS: '/posts',
         TESTING: '/testing'
     },
+    CREDENTIALS: {
+        LOGIN: 'admin',
+        PASSWORD: 'qwerty'
+    },
     PORT: process.env.PORT || 3003
 }
 
@@ -15,5 +19,6 @@ export enum HTTP_CODES  {
         CREATED_201 = 201,
         NO_CONTENT_204 = 204,
         BAD_REQUEST_400 = 400,
+        UNAUTHORIZED = 401,
         NOT_FOUND_404 = 404
 }
