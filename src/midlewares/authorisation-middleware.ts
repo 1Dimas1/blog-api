@@ -13,8 +13,8 @@ export const authorisationMiddleware = (
 
     if (authHeader && authHeader === validAuthValue) {
         next()
+    } else {
+        res.sendStatus(HTTP_CODES.UNAUTHORIZED)
+        return;
     }
-
-    res.sendStatus(HTTP_CODES.UNAUTHORIZED)
-    return;
 }
