@@ -7,7 +7,7 @@ export const blogsRepository = {
     },
     createBlog(body: BlogInputType): BlogOutPutType {
         const blog: BlogDBType = {
-            id: new Date().toString(),
+            id: new Date().toISOString() + Math.random(),
             name: body.name,
             description: body.description,
             websiteUrl: body.websiteUrl

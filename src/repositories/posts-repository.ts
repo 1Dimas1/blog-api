@@ -10,7 +10,7 @@ export const postsRepository = {
         const postsBlog = blogsRepository.findBlogById(body.blogId)
         if (!postsBlog) { return undefined }
         const post: PostDBType = {
-            id: new Date().toString(),
+            id: new Date().toISOString() + Math.random(),
             title: body.title,
             shortDescription: body.shortDescription,
             content: body.content,
