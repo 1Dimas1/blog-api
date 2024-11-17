@@ -1,7 +1,7 @@
 import { body } from 'express-validator'
 import {blogsRepository} from "../repositories/blogs-repository";
 
-const urlPattern = '/^https:\\/\\/([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$/';
+// const urlPattern = '/^https:\\/\\/([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$/';
 
 export const blogNameValidator = body('name')
     .isString().notEmpty().trim().withMessage('name is required')
@@ -17,7 +17,7 @@ export const blogWebsiteUrlValidator = body('websiteUrl')
     .isString().notEmpty().trim().withMessage('websiteUrl is required')
     .isLength({min: 1, max: 100})
     .withMessage('websiteUrl should contain 1 - 100 symbols')
-    .matches(urlPattern)
+    .isURL()
     .withMessage('Invalid URL format')
 
 export const postTitleValidator = body('title')

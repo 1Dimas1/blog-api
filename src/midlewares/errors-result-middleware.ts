@@ -1,5 +1,6 @@
 import { validationResult } from "express-validator";
 import { NextFunction, Request, Response } from "express";
+import {HTTP_CODES} from "../settings";
 
 export const errorResultMiddleware = (
     req: Request,
@@ -8,7 +9,7 @@ export const errorResultMiddleware = (
 ) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        res.status(400).send({
+        res.status(HTTP_CODES.BAD_REQUEST_400).send({
             errorsMessages: errors
                 .array({onlyFirstError: true})
                 .map((err) => {
