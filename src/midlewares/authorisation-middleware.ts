@@ -14,7 +14,7 @@ export const authorisationMiddleware = (
     if (authHeader && authHeader === validAuthValue) {
         next()
     } else {
-        res.sendStatus(HTTP_CODES.UNAUTHORIZED)
+        res.sendStatus(HTTP_CODES.UNAUTHORIZED_401)
         return;
     }
 }

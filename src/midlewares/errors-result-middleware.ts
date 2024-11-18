@@ -9,7 +9,6 @@ export const errorResultMiddleware = (
 ) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        console.log(errors.array({ onlyFirstError: true }));
         res.status(HTTP_CODES.BAD_REQUEST_400).send({
             errorsMessages: errors
                 .array({onlyFirstError: true})
