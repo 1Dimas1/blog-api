@@ -13,7 +13,7 @@ export const blogsRepository = {
             description: body.description,
             websiteUrl: body.websiteUrl,
             createdAt: new Date().toISOString(),
-            isMembership: true
+            isMembership: false
         }
         const result = await blogCollection.insertOne(blog)
         return this.mapToOutput(blog)
