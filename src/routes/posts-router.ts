@@ -16,7 +16,6 @@ postsRouter.get('/', postsController.getPosts);
 
 postsRouter.get('/:id',
     validatePostExistsMiddleware,
-    // @ts-ignore
     postsController.getPostById);
 
 postsRouter.post('/',
@@ -36,13 +35,11 @@ postsRouter.put('/:id',
     postContentValidator,
     blogIdValidator,
     errorResultMiddleware,
-    // @ts-ignore
     postsController.updatePost);
 
 postsRouter.delete('/:id',
     authorisationMiddleware,
     validatePostExistsMiddleware,
-    // @ts-ignore
     postsController.deletePost);
 
 export default postsRouter;

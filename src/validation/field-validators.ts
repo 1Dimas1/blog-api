@@ -1,8 +1,6 @@
 import { body } from 'express-validator'
 import {blogsRepository} from "../repositories/blogs-repository";
 
-// const urlPattern = '/^https:\\/\\/([a-zA-Z0-9_-]+\\.)+[a-zA-Z0-9_-]+(\\/[a-zA-Z0-9_-]+)*\\/?$/';
-
 export const blogNameValidator = body('name')
     .isString().notEmpty().trim().withMessage('name is required')
     .isLength({min: 1, max: 15})
@@ -37,8 +35,8 @@ export const postContentValidator = body('content')
 
 export const blogIdValidator = body('blogId')
     .isString().notEmpty().trim().withMessage('blogId is required')
-    .custom(blogId =>{
-        const blog = blogsRepository.findBlogById(blogId)
+    .custom( async (blogId) =>{
+        const blog = await blogsRepository.findBlogById(blogId)
         return blog!!
     })
     .withMessage('Blog does not exist')

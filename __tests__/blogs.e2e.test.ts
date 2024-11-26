@@ -1,8 +1,8 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
 import {req} from './test.helpers'
-import {datasetWithBlog, datasetWithBlogAndPost, getValidCredentials, invalidBlog, validBlog} from "./datasets";
+import {datasetWithBlog, getValidCredentials, invalidBlog, validBlog} from "./datasets";
 import {BlogDBType, BlogInputType} from "../src/types/blog.type";
-import {db, setDB} from "../src/db/db";
+import {setDB} from "../src/db/db";
 
 describe('/blogs', () => {
     beforeEach(async () => {

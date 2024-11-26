@@ -1,48 +1,52 @@
-import {db} from "../db/db";
+import {postCollection} from "../db/db";
 import {PostDBType, PostInputType, PostOutPutType} from "../types/post.type";
 import {blogsRepository} from "./blogs-repository";
+import {ObjectId} from "mongodb";
+import {BlogDBType} from "../types/blog.type";
 
 export const postsRepository = {
-    getPostsForOutPut():  Array<PostOutPutType> {
-        return db.posts.map(postsRepository.mapToOutput);
+    async getPosts():  Promise<PostDBType[]> {
+        return postCollection.find({}).toArray();
     },
-    createPost(body: PostInputType): PostOutPutType | undefined {
-        const postsBlog = blogsRepository.findBlogById(body.blogId)
-        if (!postsBlog) { return undefined }
+    async createPost(body: PostInputType): Promise<PostOutPutType | null> {
+        const postsBlog: BlogDBType | null = await blogsRepository.findBlogById(body.blogId)
+        if (!postsBlog) { return null }
         const post: PostDBType = {
-            id: new Date().toISOString() + Math.random(),
+            _id: new ObjectId(),
             title: body.title,
             shortDescription: body.shortDescription,
             content: body.content,
-            blogId: body.blogId,
+            blogId: postsBlog._id,
             blogName: postsBlog.name,
+            createdAt: new Date().toISOString()
         }
-        db.posts.push(post)
+        const result = await postCollection.insertOne(post)
         return this.mapToOutput(post)
     },
-    updatePost(post: PostDBType, body: PostInputType)  {
-        post.title = body.title
-        post.shortDescription = body.shortDescription
-        post.content = body.content
-        post.blogId = body.blogId;
-
+    async updatePost(id: string, body: PostInputType)  {
+        const post = {
+            title : body.title,
+            shortDescription : body.shortDescription,
+            content : body.content,
+            blogId : new ObjectId(body.blogId)
+        }
+        return postCollection.updateOne({_id: new ObjectId(id)}, {$set: post})
     },
-    findPostById(id: string): PostDBType | undefined {
-        const post: PostDBType | undefined = db.posts.find(p => p.id === id)
-        return post;
+    async findPostById(id: string): Promise<PostDBType | null> {
+        return postCollection.findOne({_id: new ObjectId(id)});
     },
-
-    deletePost(id: string) {
-        db.posts = db.posts.filter(p => p.id !== id)
+    async deletePost(id: string) {
+        return postCollection.deleteOne({_id: new ObjectId(id)})
     },
     mapToOutput(post: PostDBType): PostOutPutType {  //mapping can be moved to another repository object
         return {
-            id: post.id,
+            id: post._id.toString(),
             title: post.title,
             shortDescription: post.shortDescription,
             content: post.content,
-            blogId: post.blogId,
-            blogName: post.blogName
+            blogId: post.blogId.toString(),
+            blogName: post.blogName,
+            createdAt: post.createdAt
         }
     }
 }

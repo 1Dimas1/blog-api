@@ -1,8 +1,12 @@
+import {ObjectId} from "mongodb";
+
 export type BlogDBType = {
-    id: string,
+    _id: ObjectId,
     name: string,
     description: string,
     websiteUrl: string,
+    createdAt: string,
+    isMembership: boolean
 }
 
 export type BlogInputType = {
@@ -16,6 +20,8 @@ export type BlogOutPutType = {
     name: string,
     description: string,
     websiteUrl: string,
+    createdAt: string,
+    isMembership: boolean
 }
 
 export type URIParamsBlogIdType = {

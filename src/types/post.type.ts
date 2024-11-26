@@ -1,10 +1,13 @@
+import {ObjectId} from "mongodb";
+
 export type PostDBType = {
-    id: string,
+    _id: ObjectId,
     title: string,
     shortDescription: string,
     content: string,
-    blogId: string,
+    blogId: ObjectId,
     blogName: string,
+    createdAt: string
 }
 
 export type PostInputType = {
@@ -21,6 +24,7 @@ export type PostOutPutType = {
     content: string,
     blogId: string,
     blogName: string,
+    createdAt: string,
 }
 
 export type URIParamsPostIdType = {

@@ -2,6 +2,7 @@ import {SETTINGS} from "../src/settings";
 import {BlogDBType, BlogInputType} from "../src/types/blog.type";
 import {DBType} from "../src/types/db.type";
 import {PostDBType, PostInputType} from "../src/types/post.type";
+import {ObjectId} from "mongodb";
 
 export const getValidCredentials = () => {
     const credentials = `${SETTINGS.CREDENTIALS.LOGIN}:${SETTINGS.CREDENTIALS.PASSWORD}`
@@ -31,7 +32,7 @@ export const invalidBlog: BlogInputType = {
 } as const
 
 export const blog: BlogDBType = {
-    id: '666',
+    id: new ObjectId('666'),
     name: 'name_name',
     description: 'description_description',
     websiteUrl: 'http://someUrl.com',
@@ -41,7 +42,7 @@ export const validPost: PostInputType = {
     title: 'post title',
     content: 'post content',
     shortDescription: 'post short description',
-    blogId: blog.id,
+    blogId: blog.id.toString(),
 } as const
 
 export const invalidPost: PostInputType = {

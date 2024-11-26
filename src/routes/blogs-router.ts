@@ -11,7 +11,6 @@ blogsRouter.get('/', blogsController.getBlogs);
 
 blogsRouter.get('/:id',
     validateBlogExistsMiddleware,
-    // @ts-ignore
     blogsController.getBlogById);
 
 blogsRouter.post('/',
@@ -29,13 +28,11 @@ blogsRouter.put('/:id',
     blogDescriptionValidator,
     blogWebsiteUrlValidator,
     errorResultMiddleware,
-    // @ts-ignore
     blogsController.updateBlog);
 
 blogsRouter.delete('/:id',
     authorisationMiddleware,
     validateBlogExistsMiddleware,
-    // @ts-ignore
     blogsController.deleteBlog);
 
 export default blogsRouter;

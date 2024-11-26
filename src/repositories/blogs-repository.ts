@@ -1,38 +1,41 @@
 import {BlogDBType, BlogInputType, BlogOutPutType} from "../types/blog.type";
-import {db} from "../db/db";
+import {blogCollection} from "../db/db";
+import {ObjectId} from "mongodb";
 
 export const blogsRepository = {
-    getBlogsForOutPut(): Array<BlogOutPutType> {
-        return db.blogs.map(blogsRepository.mapToOutput);
+    async getBlogs(): Promise<BlogDBType[]> {
+        return blogCollection.find({}).toArray();
     },
-    createBlog(body: BlogInputType): BlogOutPutType {
+    async createBlog(body: BlogInputType): Promise<BlogOutPutType> {
         const blog: BlogDBType = {
-            id: new Date().toISOString() + Math.random(),
+            _id: new ObjectId(),
             name: body.name,
             description: body.description,
-            websiteUrl: body.websiteUrl
+            websiteUrl: body.websiteUrl,
+            createdAt: new Date().toISOString(),
+            isMembership: true
         }
-        db.blogs.push(blog)
+        const result = await blogCollection.insertOne(blog)
         return this.mapToOutput(blog)
     },
-    updateBlog(blog: BlogDBType, body: BlogInputType) {
-        blog.name = body.name;
-        blog.description = body.description;
-        blog.websiteUrl = body.websiteUrl;
+    async updateBlog(id: string, body: BlogInputType) {
+        return blogCollection.updateOne({_id: new ObjectId(id)}, {$set: body})
     },
-    findBlogById(id: string): BlogDBType | undefined {
-        const blog: BlogDBType | undefined = db.blogs.find(b => b.id === id)
-        return blog;
+    async findBlogById(id: string): Promise<BlogDBType | null> {
+        return blogCollection.findOne({_id: new ObjectId(id)});
     },
-    deleteBlog(id: string){
-        db.blogs = db.blogs.filter(b => b.id !== id)
+    async deleteBlog(id: string){
+        return blogCollection.deleteOne({_id: new ObjectId(id)})
     },
     mapToOutput(blog: BlogDBType): BlogOutPutType { //mapping can be moved to another repository object
         return {
-             id: blog.id,
-             name: blog.name,
-             description: blog.description,
-             websiteUrl: blog.websiteUrl
+            id: blog._id.toString(),
+            name: blog.name,
+            description: blog.description,
+            websiteUrl: blog.websiteUrl,
+            createdAt: blog.createdAt,
+            isMembership: true
+
         }
     }
 }
