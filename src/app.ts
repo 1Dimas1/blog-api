@@ -8,7 +8,7 @@ export const app = express()
 app.use(express.json())
 
 app.get('/', (req, res) => {
-    res.status(HTTP_CODES.OK_200).json({version: '1.0'})
+    res.status(HTTP_CODES.OK_200).json({version: '2.0'})
 })
 
 app.use(SETTINGS.PATH.BLOGS,blogsRouter);

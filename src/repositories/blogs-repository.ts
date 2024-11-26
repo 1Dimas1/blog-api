@@ -34,8 +34,7 @@ export const blogsRepository = {
             description: blog.description,
             websiteUrl: blog.websiteUrl,
             createdAt: blog.createdAt,
-            isMembership: true
-
+            isMembership: blog.isMembership
         }
     }
 }
