@@ -24,7 +24,6 @@ postsRouter.post('/',
     postTitleValidator,
     postShortDescriptionValidator,
     postContentValidator,
-    blogIdValidator,
     errorResultMiddleware,
     postsController.createPost);
 
@@ -35,7 +34,6 @@ postsRouter.put('/:id',
     postTitleValidator,
     postShortDescriptionValidator,
     postContentValidator,
-    blogIdValidator,
     errorResultMiddleware,
     postsController.updatePost);
 

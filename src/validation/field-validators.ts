@@ -37,6 +37,8 @@ export const blogIdValidator = body('blogId')
     .isString().notEmpty().trim().withMessage('blogId is required')
     .custom( async (blogId) =>{
         const blog = await blogsRepository.findBlogById(blogId)
-        return blog!!
+        if (!blog) {
+            throw new Error("Blog does not exist")
+        }
+        return true;
     })
-    .withMessage('Blog does not exist')
