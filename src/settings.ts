@@ -11,8 +11,8 @@ export const SETTINGS = {
         LOGIN: 'admin',
         PASSWORD: 'qwerty'
     },
-    PORT: process.env.PORT || 3003,
-    MONGO_URL: process.env.NONGO_URL || 'mongodb+srv://dmt:mKHzmnP_A5gzGAN@cluster1.ul0ah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1',
+    PORT: process.env.PORT,
+    MONGO_URL: process.env.NONGO_URL,
     DB_NAME: 'blog_and_posts',
     BLOG_COLLECTION_NAME: 'blogs',
     POST_COLLECTION_NAME:'posts'

@@ -3,7 +3,13 @@ import {BlogDBType} from "../types/blog.type";
 import {PostDBType} from "../types/post.type";
 import {SETTINGS} from "../settings";
 
-const client: MongoClient = new MongoClient(SETTINGS.MONGO_URL)
+const url = SETTINGS.MONGO_URL
+
+if (!url) {
+    throw Error('!!! URL has not been found')
+}
+
+const client: MongoClient = new MongoClient(url)
 export const database: Db = client.db(SETTINGS.DB_NAME);
 
 export const blogCollection: Collection<BlogDBType> = database.collection<BlogDBType>(SETTINGS.BLOG_COLLECTION_NAME)
