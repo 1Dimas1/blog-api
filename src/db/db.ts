@@ -1,24 +1,7 @@
-import {DBType} from "../types/db.type";
-import { MongoClient, Db, Collection} from "mongodb";
+import {Collection, Db, MongoClient} from "mongodb";
 import {BlogDBType} from "../types/blog.type";
 import {PostDBType} from "../types/post.type";
 import {SETTINGS} from "../settings";
-
-export const db: DBType = {
-    blogs: [],
-    posts: []
-}
-
-export const setDB = (dataset?: DBType) => {
-    if (!dataset) {
-        db.blogs = []
-        db.posts = []
-        return
-    }
-    db.blogs = dataset.blogs?.map(b => ({...b})) || db.blogs
-    db.posts = dataset.posts?.map(p => ({...p})) || db.posts
-}
-
 
 const client: MongoClient = new MongoClient(SETTINGS.MONGO_URL)
 export const database: Db = client.db(SETTINGS.DB_NAME);
