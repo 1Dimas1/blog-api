@@ -6,7 +6,6 @@ import {SETTINGS} from "../settings";
 const url = SETTINGS.MONGO_URL
 
 if (!url) {
-    console.log(url)
     throw Error('!!! URL has not been found')
 }
 
