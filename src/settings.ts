@@ -13,9 +13,9 @@ export const SETTINGS = {
     },
     PORT: process.env.PORT,
     MONGO_URL: process.env.NONGO_URL,
-    DB_NAME: 'blog_and_posts',
-    BLOG_COLLECTION_NAME: 'blogs',
-    POST_COLLECTION_NAME:'posts'
+    DB_NAME: process.env.DB_NAME,
+    BLOG_COLLECTION_NAME: process.env.BLOG_COLLECTION_NAME,
+    POST_COLLECTION_NAME: process.env.POST_COLLECTION_NAME,
 }
 
 export enum HTTP_CODES  {
