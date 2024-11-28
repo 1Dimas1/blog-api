@@ -1,13 +1,25 @@
 import {Request, Response} from 'express'
 import {HTTP_CODES} from "../settings";
 import {blogsRepository} from "../repositories/blogs-repository";
-import {BlogDBType, BlogInputType, BlogOutPutType, URIParamsBlogIdType} from "../types/blog.type";
-import {RequestWithBody, RequestWithParams} from "../types/request.type";
+import {
+    BlogDBType,
+    BlogInputType,
+    BlogOutPutType,
+    BlogsPaginator,
+    QueryBlogType,
+    URIParamsBlogIdType
+} from "../types/blog.type";
+import {RequestWithBody, RequestWithParams, RequestWithQuery} from "../types/request.type";
+import {SortDirection} from "mongodb";
+import {blogsService} from "../services/blogs-service";
+import {paginationQueries} from "../helpers/pagination-values";
 
 export const blogsController = {
-    async getBlogs(req: Request, res: Response<BlogOutPutType[]>) {
-        const blogs: Array<BlogDBType> = await blogsRepository.getBlogs()
-        res.status(HTTP_CODES.OK_200).json(blogs.map(blogsRepository.mapToOutput))
+    async getBlogs(req: RequestWithQuery<QueryBlogType>, res: Response<BlogsPaginator>) {
+        const {sortBy, sortDirection, pageNumber, pageSize, searchNameTerm} = paginationQueries(req)
+        const blogs: BlogsPaginator = await blogsService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
+
+        res.status(HTTP_CODES.OK_200).json(blogs)
     },
     async getBlogById(req: RequestWithParams<URIParamsBlogIdType>, res: Response<BlogOutPutType>) {
         const blog: BlogDBType | null = await blogsRepository.findBlogById(req.params.id)

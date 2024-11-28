@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import {ObjectId, SortDirection} from "mongodb";
 
 export type BlogDBType = {
     _id: ObjectId,
@@ -26,4 +26,20 @@ export type BlogOutPutType = {
 
 export type URIParamsBlogIdType = {
     id: string,
+}
+
+export type QueryBlogType = {
+    searchNameTerm: string | null,
+    sortBy: string,
+    sortDirection: SortDirection,
+    pageNumber: string,
+    pageSize: string
+}
+
+export type BlogsPaginator = {
+    pagesCount: number,
+    page: number,
+    pageSize: number,
+    totalCount: number,
+    items: BlogOutPutType[]
 }

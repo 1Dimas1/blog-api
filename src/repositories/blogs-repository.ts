@@ -1,10 +1,21 @@
 import {BlogDBType, BlogInputType, BlogOutPutType} from "../types/blog.type";
 import {blogCollection} from "../db/db";
-import {ObjectId} from "mongodb";
+import {ObjectId, SortDirection} from "mongodb";
 
 export const blogsRepository = {
-    async getBlogs(): Promise<BlogDBType[]> {
-        return blogCollection.find({}).toArray();
+    async getBlogs(
+        sortBy: string,
+        sortDirection: SortDirection ,
+        pageNumber: number,
+        pageSize: number,
+        filter: any
+    ): Promise<BlogDBType[]> {
+        return blogCollection
+            .find(filter)
+            .sort({[sortBy]: sortDirection})
+            .skip((pageNumber - 1) * pageSize)
+            .limit(pageSize)
+            .toArray();
     },
     async createBlog(body: BlogInputType): Promise<BlogOutPutType> {
         const blog: BlogDBType = {
@@ -23,6 +34,9 @@ export const blogsRepository = {
     },
     async findBlogById(id: string): Promise<BlogDBType | null> {
         return blogCollection.findOne({_id: new ObjectId(id)});
+    },
+    async getBlogsCount(filter: any):Promise<number> {
+        return blogCollection.countDocuments(filter)
     },
     async deleteBlog(id: string){
         return blogCollection.deleteOne({_id: new ObjectId(id)})
