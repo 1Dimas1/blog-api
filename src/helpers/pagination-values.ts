@@ -2,7 +2,7 @@ import {QueryBlogType} from "../types/blog.type";
 import {RequestWithQuery} from "../types/request.type";
 import {SortDirection} from "mongodb";
 
-export const paginationQueries = (req: RequestWithQuery<QueryBlogType>) => {
+export const paginationBlogQueries = (req: RequestWithQuery<QueryBlogType>) => {
     let searchNameTerm: string | null = req.query.searchNameTerm ? req.query.searchNameTerm.toString() : null
 
     let sortBy: string =  req.query.sortBy ? req.query.sortBy.toString() : 'createdAt'

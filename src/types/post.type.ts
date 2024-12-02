@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import {ObjectId, SortDirection} from "mongodb";
 
 export type PostDBType = {
     _id: ObjectId,
@@ -29,4 +29,19 @@ export type PostOutPutType = {
 
 export type URIParamsPostIdType = {
     id: string,
+}
+
+export type QueryPostType = {
+    sortBy: string,
+    sortDirection: SortDirection,
+    pageNumber: string,
+    pageSize: string
+}
+
+export type PostsPaginator = {
+    pagesCount: number,
+    page: number,
+    pageSize: number,
+    totalCount: number,
+    items: PostOutPutType[]
 }

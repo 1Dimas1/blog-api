@@ -1,6 +1,6 @@
 import {BlogDBType, BlogInputType, BlogOutPutType} from "../types/blog.type";
 import {blogCollection} from "../db/db";
-import {ObjectId, SortDirection} from "mongodb";
+import {InsertOneResult, ObjectId, SortDirection, UpdateResult, DeleteResult} from "mongodb";
 
 export const blogsRepository = {
     async getBlogs(
@@ -17,19 +17,10 @@ export const blogsRepository = {
             .limit(pageSize)
             .toArray();
     },
-    async createBlog(body: BlogInputType): Promise<BlogOutPutType> {
-        const blog: BlogDBType = {
-            _id: new ObjectId(),
-            name: body.name,
-            description: body.description,
-            websiteUrl: body.websiteUrl,
-            createdAt: new Date().toISOString(),
-            isMembership: false
-        }
-        const result = await blogCollection.insertOne(blog)
-        return this.mapToOutput(blog)
+    async createBlog(blog: BlogDBType): Promise<InsertOneResult<BlogDBType>> {
+        return await blogCollection.insertOne(blog);
     },
-    async updateBlog(id: string, body: BlogInputType) {
+    async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
         return blogCollection.updateOne({_id: new ObjectId(id)}, {$set: body})
     },
     async findBlogById(id: string): Promise<BlogDBType | null> {
@@ -38,7 +29,7 @@ export const blogsRepository = {
     async getBlogsCount(filter: any):Promise<number> {
         return blogCollection.countDocuments(filter)
     },
-    async deleteBlog(id: string){
+    async deleteBlog(id: string): Promise<DeleteResult>{
         return blogCollection.deleteOne({_id: new ObjectId(id)})
     },
     mapToOutput(blog: BlogDBType): BlogOutPutType { //mapping can be moved to another repository object

@@ -1,5 +1,5 @@
-import {SortDirection} from "mongodb";
-import {BlogDBType, BlogOutPutType, BlogsPaginator} from "../types/blog.type";
+import {ObjectId, SortDirection, InsertOneResult, UpdateResult, DeleteResult} from "mongodb";
+import {BlogDBType, BlogInputType, BlogOutPutType, BlogsPaginator} from "../types/blog.type";
 import {blogsRepository} from "../repositories/blogs-repository";
 
 export const blogsService = {
@@ -35,4 +35,30 @@ export const blogsService = {
             items: blogs.map(blogsRepository.mapToOutput)
         }
     },
+    async findBlogById(id: string): Promise<BlogOutPutType | null> {
+        const blog: BlogDBType | null = await blogsRepository.findBlogById(id)
+        if (blog) {
+            return blogsRepository.mapToOutput(blog)
+        }
+        return null;
+    },
+    async createBlog(body: BlogInputType): Promise<BlogOutPutType> {
+        const blog: BlogDBType = {
+            _id: new ObjectId(),
+            name: body.name,
+            description: body.description,
+            websiteUrl: body.websiteUrl,
+            createdAt: new Date().toISOString(),
+            isMembership: false
+        }
+        const result: InsertOneResult<BlogDBType> = await blogsRepository.createBlog(blog);
+
+        return blogsRepository.mapToOutput(blog)
+    },
+    async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
+        return await blogsRepository.updateBlog(id, body)
+    },
+    async deleteBlog(id: string): Promise<DeleteResult> {
+        return await blogsRepository.deleteBlog(id)
+    }
 }
