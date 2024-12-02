@@ -10,6 +10,13 @@ export type PostDBType = {
     createdAt: string
 }
 
+export type PostDBUpdateType = {
+    title: string,
+    shortDescription: string,
+    content: string,
+    blogId: ObjectId,
+}
+
 export type PostInputType = {
     title: string,
     shortDescription: string,

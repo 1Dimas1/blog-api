@@ -20,8 +20,8 @@ export const blogsRepository = {
     async createBlog(blog: BlogDBType): Promise<InsertOneResult<BlogDBType>> {
         return await blogCollection.insertOne(blog);
     },
-    async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
-        return blogCollection.updateOne({_id: new ObjectId(id)}, {$set: body})
+    async updateBlog(id: string, blog: BlogInputType): Promise<UpdateResult<BlogDBType>> {
+        return blogCollection.updateOne({_id: new ObjectId(id)}, {$set: blog})
     },
     async findBlogById(id: string): Promise<BlogDBType | null> {
         return blogCollection.findOne({_id: new ObjectId(id)});

@@ -56,7 +56,12 @@ export const blogsService = {
         return blogsRepository.mapToOutput(blog)
     },
     async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
-        return await blogsRepository.updateBlog(id, body)
+        const blog = {
+            name: body.name,
+            description: body.description,
+            websiteUrl: body.websiteUrl,
+        }
+        return await blogsRepository.updateBlog(id, blog)
     },
     async deleteBlog(id: string): Promise<DeleteResult> {
         return await blogsRepository.deleteBlog(id)

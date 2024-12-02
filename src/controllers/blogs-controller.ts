@@ -1,6 +1,5 @@
 import {Response} from 'express'
 import {HTTP_CODES} from "../settings";
-import {blogsRepository} from "../repositories/blogs-repository";
 import {BlogInputType, BlogOutPutType, BlogsPaginator, QueryBlogType, URIParamsBlogIdType} from "../types/blog.type";
 import {RequestWithBody, RequestWithParams, RequestWithParamsAndBody, RequestWithQuery} from "../types/request.type";
 import {blogsService} from "../services/blogs-service";
@@ -10,7 +9,6 @@ export const blogsController = {
     async getBlogs(req: RequestWithQuery<QueryBlogType>, res: Response<BlogsPaginator>) {
         const {sortBy, sortDirection, pageNumber, pageSize, searchNameTerm} = paginationBlogQueries(req)
         const blogs: BlogsPaginator = await blogsService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
-
         res.status(HTTP_CODES.OK_200).json(blogs)
     },
     async getBlogById(req: RequestWithParams<URIParamsBlogIdType>, res: Response<BlogOutPutType>) {
