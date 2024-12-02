@@ -39,12 +39,17 @@ export const blogsController = {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
-
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationPostQueries(req)
         const posts: PostsPaginator = await blogsService.getPostsByBlogId(req.params.blogId, sortBy, sortDirection, pageNumber, pageSize)
         res.status(HTTP_CODES.OK_200).json(posts);
     },
     async createPostByBlogId(req: RequestWithParamsAndBody<URIParamsPostsBlogIdType, PostCreateByBlogIdInputType>, res: Response<PostOutPutType>) {
+        const blog: BlogOutPutType | null = await blogsService.findBlogById(req.params.blogId)
+        if (!blog) {
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
+            return;
+        }
+
         const newPost: PostOutPutType | null = await blogsService.createPostByBlogId(req.params.blogId, req.body)
         if (!newPost) {
             res.status(HTTP_CODES.NOT_FOUND_404)

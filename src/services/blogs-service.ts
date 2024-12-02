@@ -72,8 +72,12 @@ export const blogsService = {
         pageNumber: number,
         pageSize: number,
     ): Promise<PostsPaginator> {
-
-        const filter = {blogId: new ObjectId(blogId)}
+        const search = blogId
+            ? {blogId: new ObjectId(blogId)}
+            : {}
+        const filter = {
+            ...search
+        }
         return await postsService.getPosts(sortBy, sortDirection, pageNumber, pageSize, filter);
     },
     async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
