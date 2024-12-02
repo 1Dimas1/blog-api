@@ -1,5 +1,5 @@
-import {blogCollection, postCollection} from "../db/db";
-import {PostDBType, PostDBUpdateType, PostInputType, PostOutPutType} from "../types/post.type";
+import {postCollection} from "../db/db";
+import {PostDBType, PostDBUpdateType, PostOutPutType} from "../types/post.type";
 import {DeleteResult, InsertOneResult, ObjectId, SortDirection, UpdateResult} from "mongodb";
 
 export const postsRepository = {

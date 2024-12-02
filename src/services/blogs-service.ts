@@ -14,7 +14,7 @@ export const blogsService = {
     ): Promise<BlogsPaginator> {
 
         const search = searchNameTerm
-            ? {title: {$regex: searchNameTerm, $options: 'i'}}
+            ? {name: {$regex: searchNameTerm, $options: 'i'}}
             : {}
         const filter = {
             ...search
