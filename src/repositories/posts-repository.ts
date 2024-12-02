@@ -26,8 +26,8 @@ export const postsRepository = {
     async findPostById(id: string): Promise<PostDBType | null> {
         return postCollection.findOne({_id: new ObjectId(id)});
     },
-    async getPostsCount():Promise<number> {
-        return blogCollection.countDocuments();
+    async getPostsCount(filter: any):Promise<number> {
+        return blogCollection.countDocuments(filter);
     },
     async deletePost(id: string): Promise<DeleteResult> {
         return postCollection.deleteOne({_id: new ObjectId(id)})
