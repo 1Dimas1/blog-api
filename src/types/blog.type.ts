@@ -28,6 +28,10 @@ export type URIParamsBlogIdType = {
     id: string,
 }
 
+export type URIParamsPostsBlogIdType = {
+    blogId: string,
+}
+
 export type QueryBlogType = {
     searchNameTerm: string | null,
     sortBy: string,

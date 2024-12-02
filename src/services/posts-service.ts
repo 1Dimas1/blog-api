@@ -10,8 +10,9 @@ export const postsService = {
         sortDirection: SortDirection ,
         pageNumber: number,
         pageSize: number,
+        filter: any = {}
     ): Promise<PostsPaginator> {
-        const posts: PostDBType[] = await postsRepository.getPosts(sortBy, sortDirection, pageNumber, pageSize)
+        const posts: PostDBType[] = await postsRepository.getPosts(sortBy, sortDirection, pageNumber, pageSize, filter)
         const postsCount: number = await postsRepository.getPostsCount()
         return {
             pagesCount: Math.ceil(postsCount / pageSize),

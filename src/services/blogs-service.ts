@@ -1,6 +1,8 @@
-import {ObjectId, SortDirection, InsertOneResult, UpdateResult, DeleteResult} from "mongodb";
+import {DeleteResult, InsertOneResult, ObjectId, SortDirection, UpdateResult} from "mongodb";
 import {BlogDBType, BlogInputType, BlogOutPutType, BlogsPaginator} from "../types/blog.type";
 import {blogsRepository} from "../repositories/blogs-repository";
+import {postsService} from "./posts-service";
+import {PostCreateByBlogIdInputType, PostInputType, PostOutPutType, PostsPaginator} from "../types/post.type";
 
 export const blogsService = {
     async getBlogs(
@@ -52,8 +54,27 @@ export const blogsService = {
             isMembership: false
         }
         const result: InsertOneResult<BlogDBType> = await blogsRepository.createBlog(blog);
-
         return blogsRepository.mapToOutput(blog)
+    },
+    async createPostByBlogId(blogId: string, body: PostCreateByBlogIdInputType): Promise<PostOutPutType | null> {
+        const bodyForPostCreation: PostInputType = {
+            title: body.title,
+            shortDescription: body.shortDescription,
+            content: body.content,
+            blogId: blogId,
+        }
+        return await postsService.createPost(bodyForPostCreation)
+    },
+    async getPostsByBlogId(
+        blogId: string,
+        sortBy: string,
+        sortDirection: SortDirection ,
+        pageNumber: number,
+        pageSize: number,
+    ): Promise<PostsPaginator> {
+
+        const filter = {blogId: new ObjectId(blogId)}
+        return await postsService.getPosts(sortBy, sortDirection, pageNumber, pageSize, filter);
     },
     async updateBlog(id: string, body: BlogInputType): Promise<UpdateResult<BlogDBType>> {
         const blog = {

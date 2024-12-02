@@ -23,7 +23,7 @@ export const postsController = {
     async createPost(req: RequestWithBody<PostInputType>, res: Response<PostOutPutType>) {
         const newPost: PostOutPutType | null = await postsService.createPost(req.body)
         if (!newPost) {
-            res.status(HTTP_CODES.BAD_REQUEST_400)
+            res.status(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         res.status(HTTP_CODES.CREATED_201).json(newPost)

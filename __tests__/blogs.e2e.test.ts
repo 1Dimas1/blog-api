@@ -7,13 +7,16 @@ describe('/blogs', () => {
     beforeEach(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
     })
+    afterAll(async () => {
+        await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
+    })
 
     it('GET blogs = []', async () => {
         const res = await req
             .get(SETTINGS.PATH.BLOGS)
             .expect(HTTP_CODES.OK_200)
 
-        expect(res.body.length).toBe(0)
+        expect(res.body.items.length).toBe(0)
     })
     it('GET blogs returns a newly created blog', async () => {
         const newBlog: BlogInputType = {

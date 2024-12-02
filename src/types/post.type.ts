@@ -24,6 +24,12 @@ export type PostInputType = {
     blogId: string,
 }
 
+export type PostCreateByBlogIdInputType = {
+    title: string,
+    shortDescription: string,
+    content: string,
+}
+
 export type PostOutPutType = {
     id: string,
     title: string,
