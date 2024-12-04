@@ -63,7 +63,8 @@ export const blogsService = {
             content: body.content,
             blogId: blogId,
         }
-        return await postsService.createPost(bodyForPostCreation)
+        const post = await postsService.createPost(bodyForPostCreation)
+        return post
     },
     async getPostsByBlogId(
         blogId: string,

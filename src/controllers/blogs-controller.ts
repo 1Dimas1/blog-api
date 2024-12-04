@@ -49,7 +49,6 @@ export const blogsController = {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
-
         const newPost: PostOutPutType | null = await blogsService.createPostByBlogId(req.params.blogId, req.body)
         if (!newPost) {
             res.status(HTTP_CODES.NOT_FOUND_404)

@@ -35,13 +35,13 @@ describe('/blogs', () => {
             .get(SETTINGS.PATH.BLOGS)
             .expect(HTTP_CODES.OK_200)
 
-        expect(resGet.body.length).toBe(1)
-        expect(resGet.body[0].id).toEqual(resPost.body.id)
-        expect(resGet.body[0].name).toEqual(resPost.body.name)
-        expect(resGet.body[0].description).toEqual(resPost.body.description)
-        expect(resGet.body[0].websiteUrl).toEqual(resPost.body.websiteUrl)
-        expect(resGet.body[0].createdAt).toEqual(resPost.body.createdAt)
-        expect(resGet.body[0].isMembership).toEqual(resPost.body.isMembership)
+        expect(resGet.body.items.length).toBe(1)
+        expect(resGet.body.items[0].id).toEqual(resPost.body.id)
+        expect(resGet.body.items[0].name).toEqual(resPost.body.name)
+        expect(resGet.body.items[0].description).toEqual(resPost.body.description)
+        expect(resGet.body.items[0].websiteUrl).toEqual(resPost.body.websiteUrl)
+        expect(resGet.body.items[0].createdAt).toEqual(resPost.body.createdAt)
+        expect(resGet.body.items[0].isMembership).toEqual(resPost.body.isMembership)
     })
     it('- GET blog by ID with incorrect ID 404', async () => {
         const id: string = '67462ce1b0650d27e4ecfcf6'
@@ -110,7 +110,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('- POST shouldn\'t create 400', async () => {
         const newBlog: BlogInputType = {
@@ -119,19 +119,19 @@ describe('/blogs', () => {
             websiteUrl: createString(101)
         }
 
-        const res = await req
+        const resPost = await req
             .post(SETTINGS.PATH.BLOGS)
             .set({'Authorization': getValidCredentials()})
             .send(newBlog)
             .expect(HTTP_CODES.BAD_REQUEST_400)
 
-        expect(res.body.errorsMessages.length).toEqual(3)
-        expect(res.body.errorsMessages[0].field).toEqual('name')
-        expect(res.body.errorsMessages[1].field).toEqual('description')
-        expect(res.body.errorsMessages[2].field).toEqual('websiteUrl')
+        expect(resPost.body.errorsMessages.length).toEqual(3)
+        expect(resPost.body.errorsMessages[0].field).toEqual('name')
+        expect(resPost.body.errorsMessages[1].field).toEqual('description')
+        expect(resPost.body.errorsMessages[2].field).toEqual('websiteUrl')
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('+ DELETE should del', async () => {
         const newBlog: BlogInputType = {
@@ -152,7 +152,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NO_CONTENT_204)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('- DELETE shouldn\'t del 404', async () => {
         const id: string = '67462ce1b0650d27e4ecfcf6'
@@ -175,8 +175,8 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NOT_FOUND_404)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.length).toEqual(1)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items.length).toEqual(1)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- DELETE shouldn\'t del 401', async () => {
         const newBlog: BlogInputType = {
@@ -197,8 +197,8 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.length).toEqual(1)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items.length).toEqual(1)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('+ PUT should update', async () => {
         const newBlog: BlogInputType = {
@@ -226,7 +226,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NO_CONTENT_204)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body[0]).toEqual({...resGet.body[0], ...blogDataToUpdate})
+        expect(resGet.body.items[0]).toEqual({...resGet.body.items[0], ...blogDataToUpdate})
     })
     it('- PUT shouldn\'t update 404', async () => {
         const newBlog: BlogInputType = {
@@ -256,7 +256,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NOT_FOUND_404)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body[0]).not.toEqual({...resGet.body[0], ...blogDataToUpdate})
+        expect(resGet.body.items[0]).not.toEqual({...resGet.body.items[0], ...blogDataToUpdate})
     })
     it('- PUT shouldn\'t update 400', async () => {
         const newBlog: BlogInputType = {
@@ -289,7 +289,7 @@ describe('/blogs', () => {
         expect(resPut.body.errorsMessages[2].field).toEqual('websiteUrl')
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- PUT shouldn\'t update with valid blog input data 401', async () => {
         const newBlog: BlogInputType = {
@@ -317,7 +317,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- PUT shouldn\'t update with invalid blog input data 401', async () => {
         const newBlog: BlogInputType = {
@@ -345,6 +345,6 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
 })

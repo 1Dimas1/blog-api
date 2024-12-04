@@ -1,12 +1,12 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
 import {req} from './test.helpers'
 import {createString, getValidCredentials} from "./test.helpers";
-import {PostInputType} from "../src/types/post.type";
+import {PostCreateByBlogIdInputType, PostInputType} from "../src/types/post.type";
 import {BlogInputType, BlogOutPutType} from "../src/types/blog.type";
 
 let blog: BlogOutPutType;
 
-describe('/blogs', () => {
+describe('/posts', () => {
     beforeEach(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
 
@@ -30,13 +30,137 @@ describe('/blogs', () => {
             isMembership: resPost.body.isMembership
         }
     })
+    afterAll(async () => {
+        await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
+    })
+
+    it('GET posts by blog id = []', async () => {
+        const res = await req
+            .get(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+            .expect(HTTP_CODES.OK_200)
+
+        expect(res.body.items.length).toBe(0)
+    })
+    it('GET posts by blog id returns a newly created blogs post', async () => {
+        const newPost: PostInputType = {
+            title: 'title',
+            content: 'content',
+            shortDescription: 'short description',
+            blogId: blog.id.toString(),
+        }
+
+        const resPost = await req
+            .post(SETTINGS.PATH.POSTS)
+            .set({'Authorization': getValidCredentials()})
+            .send(newPost)
+            .expect(HTTP_CODES.CREATED_201)
+
+        const resGet = await req
+            .get(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+            .expect(HTTP_CODES.OK_200)
+
+        expect(resGet.body.items.length).toBe(1)
+        expect(resGet.body.items[0].id).toEqual(resPost.body.id)
+        expect(resGet.body.items[0].title).toEqual(resPost.body.title)
+        expect(resGet.body.items[0].shortDescription).toEqual(resPost.body.shortDescription)
+        expect(resGet.body.items[0].content).toEqual(resPost.body.content)
+        expect(resGet.body.items[0].blogId).toEqual(resPost.body.blogId)
+        expect(resGet.body.items[0].blogName).toEqual(resPost.body.blogName)
+        expect(resGet.body.items[0].createdAt).toEqual(resPost.body.createdAt)
+    })
+    it('- GET posts by not existing blog id 404', async () => {
+        const id: string = '67462ce1b0650d27e4ecfcf6'
+
+        const res = await req
+            .get(SETTINGS.PATH.BLOGS +`/${id}` + SETTINGS.PATH.POSTS)
+            .expect(HTTP_CODES.NOT_FOUND_404)
+
+    })
+    it('+ POST should create post by blog id', async () => {
+        const newPost: PostCreateByBlogIdInputType = {
+            title: 'title',
+            content: 'content',
+            shortDescription: 'short description',
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+            .set({'Authorization': getValidCredentials()})
+            .send(newPost)
+            .expect(HTTP_CODES.CREATED_201)
+
+        const createdAt = res.body.createdAt
+        const isValidDate = !isNaN(Date.parse(createdAt)) && createdAt === new Date(createdAt).toISOString()
+
+        expect(typeof res.body.id).toEqual('string')
+        expect(res.body.title).toEqual(newPost.title)
+        expect(res.body.shortDescription).toEqual(newPost.shortDescription)
+        expect(res.body.content).toEqual(newPost.content)
+        expect(res.body.blogId).toEqual(blog.id)
+        expect(res.body.blogName).toEqual(blog.name)
+        expect(isValidDate).toBe(true)
+    })
+    it('- POST shouldn\'t create a post by blog id 401', async () => {
+        const newPost: PostCreateByBlogIdInputType = {
+            title: 'title',
+            content: 'content',
+            shortDescription: 'short description',
+        }
+
+        await req
+            .post(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+            .send(newPost)
+            .expect(HTTP_CODES.UNAUTHORIZED_401)
+
+        const resGet = await req.get(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+        expect(resGet.body.items.length).toEqual(0)
+    })
+    it('- POST shouldn\'t a post by blog id create 400', async () => {
+        const newPost: PostCreateByBlogIdInputType = {
+            title: createString(31),
+            content: createString(1001),
+            shortDescription: createString(101),
+        }
+
+        const res = await req
+            .post(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+            .set({'Authorization': getValidCredentials()})
+            .send(newPost)
+            .expect(HTTP_CODES.BAD_REQUEST_400)
+
+        expect(res.body.errorsMessages.length).toEqual(3)
+        expect(res.body.errorsMessages[0].field).toEqual('title')
+        expect(res.body.errorsMessages[1].field).toEqual('shortDescription')
+        expect(res.body.errorsMessages[2].field).toEqual('content')
+
+        const resGet = await req.get(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+        expect(resGet.body.items.length).toEqual(0)
+    })
+    it('- POST shouldn\'t create a post by not existing blog id 404', async () => {
+        const newPost: PostCreateByBlogIdInputType = {
+            title: 'title',
+            content: 'content',
+            shortDescription: 'short description',
+        }
+
+        const id: string = '67462ce1b0650d27e4ecfcf6'
+
+        await req
+            .post(SETTINGS.PATH.BLOGS +`/${id}` + SETTINGS.PATH.POSTS)
+            .set({'Authorization': getValidCredentials()})
+            .send(newPost)
+            .expect(HTTP_CODES.NOT_FOUND_404)
+
+        const resGet = await req.get(SETTINGS.PATH.BLOGS +`/${blog.id.toString()}` + SETTINGS.PATH.POSTS)
+        expect(resGet.body.items.length).toEqual(0)
+    })
 
     it('GET posts = []', async () => {
         const res = await req
             .get(SETTINGS.PATH.POSTS)
             .expect(HTTP_CODES.OK_200)
 
-        expect(res.body.length).toBe(0)
+        expect(res.body.items.length).toBe(0)
     })
     it('GET posts returns a newly created post', async () => {
         const newPost: PostInputType = {
@@ -56,19 +180,19 @@ describe('/blogs', () => {
             .get(SETTINGS.PATH.POSTS)
             .expect(HTTP_CODES.OK_200)
 
-        expect(resGet.body.length).toBe(1)
-        expect(resGet.body[0].id).toEqual(resPost.body.id)
-        expect(resGet.body[0].title).toEqual(resPost.body.title)
-        expect(resGet.body[0].shortDescription).toEqual(resPost.body.shortDescription)
-        expect(resGet.body[0].content).toEqual(resPost.body.content)
-        expect(resGet.body[0].blogId).toEqual(resPost.body.blogId)
-        expect(resGet.body[0].blogName).toEqual(resPost.body.blogName)
-        expect(resGet.body[0].createdAt).toEqual(resPost.body.createdAt)
+        expect(resGet.body.items.length).toBe(1)
+        expect(resGet.body.items[0].id).toEqual(resPost.body.id)
+        expect(resGet.body.items[0].title).toEqual(resPost.body.title)
+        expect(resGet.body.items[0].shortDescription).toEqual(resPost.body.shortDescription)
+        expect(resGet.body.items[0].content).toEqual(resPost.body.content)
+        expect(resGet.body.items[0].blogId).toEqual(resPost.body.blogId)
+        expect(resGet.body.items[0].blogName).toEqual(resPost.body.blogName)
+        expect(resGet.body.items[0].createdAt).toEqual(resPost.body.createdAt)
     })
     it('- GET post by ID with incorrect ID 404', async () => {
         const id: string = '67462ce1b0650d27e4ecfcf6'
 
-        const res = await req
+        await req
             .get(SETTINGS.PATH.POSTS.concat(`/${id}`))
             .expect(HTTP_CODES.NOT_FOUND_404)
     })
@@ -137,7 +261,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('- POST shouldn\'t create 400', async () => {
         const newPost: PostInputType = {
@@ -160,7 +284,7 @@ describe('/blogs', () => {
         expect(res.body.errorsMessages[3].field).toEqual('content')
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('+ DELETE should del', async () => {
         const newPost: PostInputType = {
@@ -182,7 +306,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NO_CONTENT_204)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body.length).toEqual(0)
+        expect(resGet.body.items.length).toEqual(0)
     })
     it('- DELETE shouldn\'t del 404', async () => {
         const id: string = '67462ce1b0650d27e4ecfcf6'
@@ -206,8 +330,8 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NOT_FOUND_404)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body.length).toEqual(1)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items.length).toEqual(1)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- DELETE shouldn\'t del 401', async () => {
         const newPost: PostInputType = {
@@ -229,8 +353,8 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body.length).toEqual(1)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items.length).toEqual(1)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('+ PUT should update', async () => {
         const newBlogForPostUpdate: BlogInputType = {
@@ -272,7 +396,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NO_CONTENT_204)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body[0]).toEqual({...resGet.body[0], ...postDataToUpdate, blogName: resPostBlog.body.name})
+        expect(resGet.body.items[0]).toEqual({...resGet.body.items[0], ...postDataToUpdate, blogName: resPostBlog.body.name})
     })
     it('- PUT shouldn\'t update 404', async () => {
         const newBlogForPostUpdate: BlogInputType = {
@@ -316,7 +440,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.NOT_FOUND_404)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body[0]).not.toEqual({...resGet.body[0], ...postDataToUpdate, blogName: resPostBlog.body.name})
+        expect(resGet.body.items[0]).not.toEqual({...resGet.body.items[0], ...postDataToUpdate, blogName: resPostBlog.body.name})
     })
     it('- PUT shouldn\'t update 400', async () => {
         const newPost: PostInputType = {
@@ -354,7 +478,7 @@ describe('/blogs', () => {
         expect(resPut.body.errorsMessages[3].field).toEqual('content')
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- PUT shouldn\'t update with valid post input data 401', async () => {
         const newBlogForPostUpdate: BlogInputType = {
@@ -396,7 +520,7 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
     it('- PUT shouldn\'t update with invalid post input data 401', async () => {
         const newPost: PostInputType = {
@@ -428,6 +552,6 @@ describe('/blogs', () => {
             .expect(HTTP_CODES.UNAUTHORIZED_401)
 
         const resGet = await req.get(SETTINGS.PATH.POSTS)
-        expect(resGet.body[0]).toEqual(resPost.body)
+        expect(resGet.body.items[0]).toEqual(resPost.body)
     })
 })
