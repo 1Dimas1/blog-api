@@ -45,10 +45,10 @@ export type URIParamsPostIdType = {
 }
 
 export type QueryPostType = {
-    sortBy: string,
-    sortDirection: SortDirection,
-    pageNumber: string,
-    pageSize: string
+    sortBy?: string,
+    sortDirection?: SortDirection,
+    pageNumber?: string,
+    pageSize?: string
 }
 
 export type PostsPaginator = {

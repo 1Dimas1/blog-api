@@ -4,7 +4,7 @@ import {HTTP_CODES} from "../settings";
 
 export const errorResultMiddleware = (
     req: Request,
-    res: Response,
+    res: Response<ErrorResponse>,
     next: NextFunction,
 ) => {
     const errors = validationResult(req)

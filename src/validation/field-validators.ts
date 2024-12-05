@@ -1,6 +1,23 @@
 import { body } from 'express-validator'
 import {blogsRepository} from "../repositories/blogs-repository";
 
+export const userLoginValidator = body('login')
+    .isString().notEmpty().trim().withMessage('login is required')
+    .isLength({min: 3, max: 10})
+    .withMessage('login should contain 3 - 10 symbols')
+    .matches(/^[a-zA-Z0-9_-]*$/)
+    .withMessage('Login must contain only letters, numbers, underscores, and hyphens')
+
+export const userEmailValidator = body('email')
+    .isString().notEmpty().trim().withMessage('email is required')
+    .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
+    .withMessage('Invalid email format')
+
+export const userPasswordValidator = body('password')
+    .isString().notEmpty().trim().withMessage('password is required')
+    .isLength({ min: 6, max: 20 })
+    .withMessage('Password must be between 6 and 20 characters long')
+
 export const blogNameValidator = body('name')
     .isString().notEmpty().trim().withMessage('name is required')
     .isLength({min: 1, max: 15})

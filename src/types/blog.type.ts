@@ -33,11 +33,11 @@ export type URIParamsPostsBlogIdType = {
 }
 
 export type QueryBlogType = {
-    searchNameTerm: string | null,
-    sortBy: string,
-    sortDirection: SortDirection,
-    pageNumber: string,
-    pageSize: string
+    searchNameTerm?: string | null,
+    sortBy?: string,
+    sortDirection?: SortDirection,
+    pageNumber?: string,
+    pageSize?: string
 }
 
 export type BlogsPaginator = {
