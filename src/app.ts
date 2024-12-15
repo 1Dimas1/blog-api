@@ -1,9 +1,11 @@
 import express from 'express'
 import {HTTP_CODES, SETTINGS} from "./settings";
-import testingRouter from "./routes/testing.routes";
-import blogsRouter from "./routes/blogs-router";
-import postsRouter from "./routes/posts-router";
-import usersRouter from "./routes/users-router";
+import testingRouter from "./features/testing/testing.routes";
+import blogsRouter from "./features/blogs/blogs-router";
+import postsRouter from "./features/posts/posts-router";
+import usersRouter from "./features/users/users-router";
+import {authController} from "./features/auth/auth-controller";
+import authRouter from "./features/auth/auth-router";
 
 export const app = express()
 app.use(express.json())
@@ -15,4 +17,5 @@ app.get('/', (req, res) => {
 app.use(SETTINGS.PATH.BLOGS,blogsRouter);
 app.use(SETTINGS.PATH.POSTS,postsRouter);
 app.use(SETTINGS.PATH.USERS,usersRouter);
+app.use(SETTINGS.PATH.AUTH, authRouter);
 app.use(SETTINGS.PATH.TESTING, testingRouter);

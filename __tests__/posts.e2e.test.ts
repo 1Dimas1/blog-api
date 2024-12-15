@@ -1,10 +1,10 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
 import {req} from './test.helpers'
 import {createString, getValidCredentials} from "./test.helpers";
-import {PostCreateByBlogIdInputType, PostInputType} from "../src/types/post.type";
-import {BlogInputType, BlogOutPutType} from "../src/types/blog.type";
+import {PostCreateByBlogIdInputType, PostInputType} from "../src/features/posts/post.type";
+import {BlogInputType, BlogViewModel} from "../src/features/blogs/blog.type";
 
-let blog: BlogOutPutType;
+let blog: BlogViewModel;
 
 describe('/posts', () => {
     beforeEach(async () => {

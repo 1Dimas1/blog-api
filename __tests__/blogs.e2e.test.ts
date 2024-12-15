@@ -1,7 +1,7 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
 import {req} from './test.helpers'
 import {createString, getValidCredentials} from "./test.helpers";
-import {BlogInputType} from "../src/types/blog.type";
+import {BlogInputType} from "../src/features/blogs/blog.type";
 
 describe('/blogs', () => {
     beforeEach(async () => {

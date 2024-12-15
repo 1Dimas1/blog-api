@@ -6,6 +6,7 @@ export const SETTINGS = {
         BLOGS: '/blogs',
         POSTS: '/posts',
         USERS: '/users',
+        AUTH: '/auth',
         TESTING: '/testing'
     },
     CREDENTIALS: {
@@ -26,5 +27,6 @@ export enum HTTP_CODES  {
         NO_CONTENT_204 = 204,
         BAD_REQUEST_400 = 400,
         UNAUTHORIZED_401 = 401,
-        NOT_FOUND_404 = 404
+        NOT_FOUND_404 = 404,
+        INTERNAL_SERVER_ERROR_500 = 500,
 }
