@@ -43,6 +43,11 @@ export const blogsController = {
         res.status(HTTP_CODES.OK_200).json(posts);
     },
     async createPostByBlogId(req: RequestWithParamsAndBody<BlogIdParams, PostCreateByBlogIdInputType>, res: Response<PostViewType>) {
+        const blog: BlogViewModel | null = await blogsQueryRepository.findBlogById(req.params.id)
+        if (!blog) {
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
+            return;
+        }
         const newPost: PostViewType | null = await blogsService.createPostByBlogId(req.params.id, req.body)
         if (!newPost) {
             res.status(HTTP_CODES.NOT_FOUND_404)
