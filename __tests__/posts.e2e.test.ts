@@ -1,6 +1,6 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
-import {req} from './test.helpers'
-import {createString, getValidCredentials} from "./test.helpers";
+import {req} from './helpers/test.helpers'
+import {createString, getValidCredentials} from "./helpers/test.helpers";
 import {PostCreateByBlogIdInputType, PostInputType} from "../src/features/posts/post.type";
 import {BlogInputType, BlogViewModel} from "../src/features/blogs/blog.type";
 
