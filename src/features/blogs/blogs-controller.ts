@@ -13,10 +13,17 @@ import {
 } from "../../common/types/request.type";
 import {blogsService} from "./blogs-service";
 import {paginationBlogQueries, paginationPostQueries} from "../../common/helpers/pagination-values";
-import {PostCreateByBlogIdInputType, PostViewType, PostsPaginator, QueryPostType} from "../posts/post.type";
+import {
+    PostCreateByBlogIdInputType,
+    PostViewType,
+    PostsPaginator,
+    QueryPostType,
+    PostInputType
+} from "../posts/post.type";
 import {blogsQueryService} from "./blogs-queryService";
 import {blogsQueryRepository} from "./blogs-queryRepository";
 import {postsQueryService} from "../posts/posts-queryService";
+import {postsService} from "../posts/posts-service";
 
 export const blogsController = {
     async getBlogs(req: RequestWithQuery<QueryBlogDto>, res: Response<BlogsPaginator>) {
@@ -48,7 +55,13 @@ export const blogsController = {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
-        const newPost: PostViewType | null = await blogsService.createPostByBlogId(req.params.id, req.body)
+        const post: PostInputType = {
+            title: req.body.title,
+            shortDescription: req.body.shortDescription,
+            content: req.body.content,
+            blogId: req.params.id,
+        }
+        const newPost: PostViewType | null = await postsService.createPost(post)
         if (!newPost) {
             res.status(HTTP_CODES.NOT_FOUND_404)
             return;
@@ -58,7 +71,7 @@ export const blogsController = {
     async createBlog(req: RequestWithBody<BlogInputType>, res: Response<BlogViewModel>) {
         const newBlog: BlogViewModel | null = await blogsService.createBlog(req.body)
         if(!newBlog) {
-            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.status(HTTP_CODES.NOT_FOUND_404)
             return
         }
         res.status(HTTP_CODES.CREATED_201).json(newBlog)
@@ -66,7 +79,7 @@ export const blogsController = {
     async updateBlog(req: RequestWithParamsAndBody<BlogIdParams, BlogInputType>, res: Response) {
         const isUpdated: boolean = await blogsService.updateBlog(req.params.id, req.body)
         if (!isUpdated) {
-            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return
         }
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)
@@ -74,7 +87,7 @@ export const blogsController = {
     async deleteBlog(req: RequestWithParams<BlogIdParams>, res: Response) {
         const isDeleted: boolean = await blogsService.deleteBlog(req.params.id)
         if (!isDeleted) {
-            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)

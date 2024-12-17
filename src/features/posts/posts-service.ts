@@ -9,6 +9,7 @@ export const postsService = {
     async createPost(postData: PostInputType): Promise<PostViewType | null> {
         const postsBlog: BlogDBType | null = await blogsRepository.findBlogById(postData.blogId)
         if (!postsBlog) { return null }
+
         const post: PostType = {
             title: postData.title,
             shortDescription: postData.shortDescription,

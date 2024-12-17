@@ -33,7 +33,7 @@ export const postsController = {
     async updatePost(req: RequestWithParams<BlogIdParams>, res: Response){
         const isUpdated = await postsService.updatePost(req.params.id, req.body)
         if (!isUpdated) {
-            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return
         }
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)
@@ -41,7 +41,7 @@ export const postsController = {
     async deletePost(req: RequestWithParams<BlogIdParams>, res: Response) {
         const isDeleted = await postsService.deletePost((req.params.id))
         if (!isDeleted) {
-            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)

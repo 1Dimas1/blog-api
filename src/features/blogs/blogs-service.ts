@@ -1,8 +1,6 @@
 import {DeleteResult, InsertOneResult, UpdateResult} from "mongodb";
 import {BlogDBType, BlogInputType, BlogType, BlogViewModel} from "./blog.type";
 import {blogsRepository} from "./blogs-repository";
-import {postsService} from "../posts/posts-service";
-import {PostCreateByBlogIdInputType, PostInputType, PostViewType} from "../posts/post.type";
 import {blogsQueryRepository} from "./blogs-queryRepository";
 
 export const blogsService = {
@@ -16,15 +14,6 @@ export const blogsService = {
         }
         const result: InsertOneResult<BlogDBType> = await blogsRepository.createBlog(blog);
         return blogsQueryRepository.findBlogById(result.insertedId.toString());
-    },
-    async createPostByBlogId(blogId: string, body: PostCreateByBlogIdInputType): Promise<PostViewType | null> {
-        const bodyForPostCreation: PostInputType = {
-            title: body.title,
-            shortDescription: body.shortDescription,
-            content: body.content,
-            blogId: blogId,
-        }
-        return postsService.createPost(bodyForPostCreation)
     },
     async updateBlog(id: string, blogData: BlogInputType): Promise<boolean> {
         const blog = {

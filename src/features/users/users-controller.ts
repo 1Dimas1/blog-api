@@ -28,7 +28,7 @@ export const usersController = {
 
         const newUser: UserOutPutType | null = await usersService.createUser(req.body)
         if(!newUser) {
-            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.status(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         res.status(HTTP_CODES.CREATED_201).json(newUser)
@@ -36,7 +36,7 @@ export const usersController = {
     async deleteUser(req: RequestWithParams<URIParamsUserIdType>, res: Response) {
         const isDeleted: boolean = await usersService.deleteUser(req.params.id)
         if (!isDeleted) {
-            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500)
+            res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)
