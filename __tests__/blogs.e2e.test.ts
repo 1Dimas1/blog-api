@@ -1,350 +1,508 @@
 import {HTTP_CODES, SETTINGS} from "../src/settings";
-import {req} from './helpers/test.helpers'
-import {createString, getValidCredentials} from "./helpers/test.helpers";
-import {BlogInputType} from "../src/features/blogs/blog.type";
+import {BlogTestRepository} from "./helpers/blogs/blog.test-repository";
+import {createString, req} from "./helpers/test.helpers";
+import {blogTestFactory} from "./helpers/blogs/blog.test-factory";
+import {
+    createTestBlog,
+    expectBlogsToMatch,
+    expectBlogToMatchInput,
+    expectValidationErrors,
+    expectValidBlogShape
+} from "./helpers/blogs/blog.test-helpers";
+import {BlogsResponse} from "./helpers/blogs/blog.test.type";
+import {BlogViewModel} from "../src/features/blogs/blog.type";
 
 describe('/blogs', () => {
+    let blogRepository: BlogTestRepository;
+
     beforeEach(async () => {
+        blogRepository = new BlogTestRepository(req);
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
     })
+
     afterAll(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
     })
 
-    it('GET blogs = []', async () => {
-        const res = await req
-            .get(SETTINGS.PATH.BLOGS)
-            .expect(HTTP_CODES.OK_200)
+    describe('GET /blogs', () => {
+        it('should return empty array when no blogs exist', async () => {
+            const res = await blogRepository.getAllBlogs()
 
-        expect(res.body.items.length).toBe(0)
-    })
-    it('GET blogs returns a newly created blog', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+            expect(res.status).toBe(HTTP_CODES.OK_200)
+            expect(res.body.items).toHaveLength(0)
+        })
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+        it('should return newly created blog', async () => {
+            const blogInput = blogTestFactory.createBlogInputDto()
 
-        const resGet = await req
-            .get(SETTINGS.PATH.BLOGS)
-            .expect(HTTP_CODES.OK_200)
+            const createRes = await blogRepository.createBlog(blogInput)
+            const getRes = await blogRepository.getAllBlogs()
 
-        expect(resGet.body.items.length).toBe(1)
-        expect(resGet.body.items[0].id).toEqual(resPost.body.id)
-        expect(resGet.body.items[0].name).toEqual(resPost.body.name)
-        expect(resGet.body.items[0].description).toEqual(resPost.body.description)
-        expect(resGet.body.items[0].websiteUrl).toEqual(resPost.body.websiteUrl)
-        expect(resGet.body.items[0].createdAt).toEqual(resPost.body.createdAt)
-        expect(resGet.body.items[0].isMembership).toEqual(resPost.body.isMembership)
-    })
-    it('- GET blog by ID with incorrect ID 404', async () => {
-        const id: string = '67462ce1b0650d27e4ecfcf6'
+            expect(getRes.status).toBe(HTTP_CODES.OK_200)
+            expect(getRes.body.items).toHaveLength(1)
+            expectBlogsToMatch(getRes.body.items[0], createRes.body)
+        })
 
-        const res = await req
-            .get(SETTINGS.PATH.BLOGS.concat(`/${id}`))
-            .expect(HTTP_CODES.NOT_FOUND_404)
-    })
-    it('+ GET blog by ID with correct ID', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+        describe('search and pagination', () => {
+            beforeEach(async () => {
+                await blogTestFactory.createMultipleBlogs(5, blogRepository);
+            });
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+            describe('search functionality', () => {
+                it('should search blogs by name term', async () => {
+                    const res = await blogRepository.getAllBlogs({ searchNameTerm: 'Blog 1' });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resGet = await req
-            .get(SETTINGS.PATH.BLOGS.concat(`/${resPost.body.id}`))
-            .expect(HTTP_CODES.OK_200)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items.length).toBe(1);
+                    expect(blogsResponse.items[0].name).toContain('Blog 1');
+                });
 
-        expect(resPost.body.id).toEqual(resGet.body.id)
-        expect(resPost.body.name).toEqual(resGet.body.name)
-        expect(resPost.body.description).toEqual(resGet.body.description)
-        expect(resPost.body.websiteUrl).toEqual(resGet.body.websiteUrl)
-        expect(resGet.body.createdAt).toEqual(resPost.body.createdAt)
-        expect(resGet.body.isMembership).toEqual(resPost.body.isMembership)
-    })
-    it('+ POST should create a blog', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                it('should return empty array when search term matches no blogs', async () => {
+                    const res = await blogRepository.getAllBlogs({ searchNameTerm: 'NonexistentBlog' });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const res = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items).toHaveLength(0);
+                    expect(blogsResponse.totalCount).toBe(0);
+                });
 
-        const createdAt = res.body.createdAt
-        const isValidDate = !isNaN(Date.parse(createdAt)) && createdAt === new Date(createdAt).toISOString()
+                it('should handle case-insensitive search', async () => {
+                    const res = await blogRepository.getAllBlogs({ searchNameTerm: 'blog' });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        expect(typeof res.body.id).toEqual('string')
-        expect(res.body.name).toEqual(newBlog.name)
-        expect(res.body.description).toEqual(newBlog.description)
-        expect(res.body.websiteUrl).toEqual(newBlog.websiteUrl)
-        expect(isValidDate).toBe(true)
-        expect(res.body.isMembership).toBe(false)
-    })
-    it('- POST shouldn\'t create 401', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items.length).toBe(5);
+                    blogsResponse.items.forEach(blog => {
+                        expect(blog.name.toLowerCase()).toContain('blog');
+                    });
+                });
+            });
 
-        await req
-            .post(SETTINGS.PATH.BLOGS)
-            .send(newBlog)
-            .expect(HTTP_CODES.UNAUTHORIZED_401)
+            describe('pagination', () => {
+                it('should return paginated results', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        pageNumber: 2,
+                        pageSize: 2
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items.length).toEqual(0)
-    })
-    it('- POST shouldn\'t create 400', async () => {
-        const newBlog: BlogInputType = {
-            name: createString(16),
-            description: createString(501),
-            websiteUrl: createString(101)
-        }
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items.length).toBe(2);
+                    expect(blogsResponse.page).toBe(2);
+                    expect(blogsResponse.pageSize).toBe(2);
+                    expect(blogsResponse.totalCount).toBe(5);
+                    expect(blogsResponse.pagesCount).toBe(3);
+                });
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.BAD_REQUEST_400)
+                it('should return first page with default pageSize when no pagination params provided', async () => {
+                    const res = await blogRepository.getAllBlogs({});
+                    const blogsResponse: BlogsResponse = res.body;
 
-        expect(resPost.body.errorsMessages.length).toEqual(3)
-        expect(resPost.body.errorsMessages[0].field).toEqual('name')
-        expect(resPost.body.errorsMessages[1].field).toEqual('description')
-        expect(resPost.body.errorsMessages[2].field).toEqual('websiteUrl')
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.page).toBe(1);
+                    expect(blogsResponse.pageSize).toBe(10);
+                    expect(blogsResponse.items.length).toBe(5);
+                });
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items.length).toEqual(0)
-    })
-    it('+ DELETE should del', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                it('should return empty array for page beyond available data', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        pageNumber: 10,
+                        pageSize: 2
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items).toHaveLength(0);
+                    expect(blogsResponse.totalCount).toBe(5);
+                });
+            });
 
-        const resDelete = await req
-            .delete(SETTINGS.PATH.BLOGS.concat(`/${resPost.body.id}`))
-            .set({'Authorization': getValidCredentials()})
-            .expect(HTTP_CODES.NO_CONTENT_204)
+            describe('sorting', () => {
+                it('should sort blogs by createdAt in ascending order', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        sortBy: 'createdAt',
+                        sortDirection: 'asc'
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items.length).toEqual(0)
-    })
-    it('- DELETE shouldn\'t del 404', async () => {
-        const id: string = '67462ce1b0650d27e4ecfcf6'
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    const dates = blogsResponse.items.map(blog => new Date(blog.createdAt).getTime());
+                    expect(dates).toEqual([...dates].sort((a, b) => a - b));
+                });
 
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                it('should sort blogs by createdAt in descending order', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        sortBy: 'createdAt',
+                        sortDirection: 'desc'
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    const dates = blogsResponse.items.map(blog => new Date(blog.createdAt).getTime());
+                    expect(dates).toEqual([...dates].sort((a, b) => b - a));
+                });
 
-        const resDelete = await req
-            .delete(SETTINGS.PATH.BLOGS.concat(`/${id}`))
-            .set({'Authorization': getValidCredentials()})
-            .expect(HTTP_CODES.NOT_FOUND_404)
+                it('should sort by name field', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        sortBy: 'name',
+                        sortDirection: 'asc'
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items.length).toEqual(1)
-        expect(resGet.body.items[0]).toEqual(resPost.body)
-    })
-    it('- DELETE shouldn\'t del 401', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    const names = blogsResponse.items.map(blog => blog.name);
+                    expect(names).toEqual([...names].sort());
+                });
+            });
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+            describe('combined functionality', () => {
+                it('should handle search with pagination', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        searchNameTerm: 'Blog',
+                        pageNumber: 2,
+                        pageSize: 2,
+                        sortBy: 'createdAt',
+                        sortDirection: 'desc'
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resDelete = await req
-            .delete(SETTINGS.PATH.BLOGS.concat(`/${resPost.body.id}`))
-            .set({'Authorization': 'invalid credentials'})
-            .expect(HTTP_CODES.UNAUTHORIZED_401)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items.length).toBeLessThanOrEqual(2);
+                    expect(blogsResponse.page).toBe(2);
+                    expect(blogsResponse.items.every(blog => blog.name.includes('Blog'))).toBe(true);
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items.length).toEqual(1)
-        expect(resGet.body.items[0]).toEqual(resPost.body)
-    })
-    it('+ PUT should update', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+                    const dates = blogsResponse.items.map(blog => new Date(blog.createdAt).getTime());
+                    expect(dates).toEqual([...dates].sort((a, b) => b - a));
+                });
 
-        const blogDataToUpdate: BlogInputType = {
-            name: 'name updated',
-            description: 'blog description updated',
-            websiteUrl: 'http://someUrlUpdated.com',
-        }
+                it('should handle empty search result with valid pagination', async () => {
+                    const res = await blogRepository.getAllBlogs({
+                        searchNameTerm: 'NonexistentBlog',
+                        pageNumber: 1,
+                        pageSize: 10
+                    });
+                    const blogsResponse: BlogsResponse = res.body;
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+                    expect(res.status).toBe(HTTP_CODES.OK_200);
+                    expect(blogsResponse.items).toHaveLength(0);
+                    expect(blogsResponse.totalCount).toBe(0);
+                    expect(blogsResponse.pagesCount).toBe(0);
+                    expect(blogsResponse.page).toBe(1);
+                    expect(blogsResponse.pageSize).toBe(10);
+                });
+            });
+        });
+    });
 
-        const resPut = await req
-            .put(SETTINGS.PATH.BLOGS.concat(`/${resPost.body.id}`))
-            .set({'Authorization': getValidCredentials()})
-            .send(blogDataToUpdate)
-            .expect(HTTP_CODES.NO_CONTENT_204)
+    describe('Blog Posts', () => {
+        it('should get posts for a specific blog', async () => {
+            const blog = await createTestBlog();
+            const post = {
+                title: 'Test Post',
+                shortDescription: 'Test Description',
+                content: 'Test Content'
+            };
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items[0]).toEqual({...resGet.body.items[0], ...blogDataToUpdate})
-    })
-    it('- PUT shouldn\'t update 404', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+            await blogRepository.createPostForBlog(blog.id, post);
+            const res = await blogRepository.getPostsForBlog(blog.id);
 
-        const id: string = '67462ce1b0650d27e4ecfcf6'
+            expect(res.status).toBe(HTTP_CODES.OK_200);
+            expect(res.body.items.length).toBe(1);
+            expect(res.body.items[0].title).toBe(post.title);
+        });
 
-        const blogDataToUpdate: BlogInputType = {
-            name: 'name updated',
-            description: 'blog description updated',
-            websiteUrl: 'http://someUrlUpdated.com',
-        }
+        it('should paginate blog posts', async () => {
+            const blog = await createTestBlog();
+            const posts = Array.from({ length: 5 }, (_, i) => ({
+                title: `Post ${i + 1}`,
+                shortDescription: `Description ${i + 1}`,
+                content: `Content ${i + 1}`
+            }));
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+            for (const post of posts) {
+                await blogRepository.createPostForBlog(blog.id, post);
+            }
 
-        const resPut = await req
-            .put(SETTINGS.PATH.BLOGS.concat(`/${id}`))
-            .set({'Authorization': getValidCredentials()})
-            .send(blogDataToUpdate)
-            .expect(HTTP_CODES.NOT_FOUND_404)
+            const res = await blogRepository.getPostsForBlog(blog.id, {
+                pageNumber: 2,
+                pageSize: 2
+            });
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items[0]).not.toEqual({...resGet.body.items[0], ...blogDataToUpdate})
-    })
-    it('- PUT shouldn\'t update 400', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+            expect(res.status).toBe(HTTP_CODES.OK_200);
+            expect(res.body.items.length).toBe(2);
+            expect(res.body.page).toBe(2);
+            expect(res.body.pageSize).toBe(2);
+        });
 
-        const blogDataToUpdate: BlogInputType = {
-            name: createString(16),
-            description: createString(501),
-            websiteUrl: createString(101)
-        }
+        it('should return 404 when getting posts for non-existent blog', async () => {
+            const res = await blogRepository.getPostsForBlog('67462ce1b0650d27e4ecfcf6');
+            expect(res.status).toBe(HTTP_CODES.NOT_FOUND_404);
+        });
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+        it('should create post for blog', async () => {
+            const blog = await createTestBlog();
+            const post = {
+                title: 'Test Post',
+                shortDescription: 'Test Description',
+                content: 'Test Content'
+            };
 
-        const resPut = await req
-            .put(SETTINGS.PATH.BLOGS.concat(`/${resPost.body.id}`))
-            .set({'Authorization': getValidCredentials()})
-            .send(blogDataToUpdate)
-            .expect(HTTP_CODES.BAD_REQUEST_400)
+            const res = await blogRepository.createPostForBlog(blog.id, post);
 
-        expect(resPut.body.errorsMessages.length).toEqual(3)
-        expect(resPut.body.errorsMessages[0].field).toEqual('name')
-        expect(resPut.body.errorsMessages[1].field).toEqual('description')
-        expect(resPut.body.errorsMessages[2].field).toEqual('websiteUrl')
+            expect(res.status).toBe(HTTP_CODES.CREATED_201);
+            expect(res.body.title).toBe(post.title);
+            expect(res.body.blogId).toBe(blog.id);
+            expect(res.body.blogName).toBe(blog.name);
+        });
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items[0]).toEqual(resPost.body)
-    })
-    it('- PUT shouldn\'t update with valid blog input data 401', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+        it('should return 401 when creating post without authorization', async () => {
+            const blog = await createTestBlog();
+            const post = {
+                title: 'Test Post',
+                shortDescription: 'Test Description',
+                content: 'Test Content'
+            };
 
-        const blogDataToUpdate: BlogInputType = {
-            name: 'name updated',
-            description: 'blog description updated',
-            websiteUrl: 'http://someUrlUpdated.com',
-        }
+            const res = await blogRepository.createPostForBlog(blog.id, post, false);
+            expect(res.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+        });
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+        it('should return 404 when creating post for non-existent blog', async () => {
+            const post = {
+                title: 'Test Post',
+                shortDescription: 'Test Description',
+                content: 'Test Content'
+            };
 
-        const resPut = await req
-            .put(SETTINGS.PATH.BLOGS + '/' + resPost.body.id)
-            .set({'Authorization': 'invalid credentials'})
-            .send(blogDataToUpdate)
-            .expect(HTTP_CODES.UNAUTHORIZED_401)
+            const res = await blogRepository.createPostForBlog('67462ce1b0650d27e4ecfcf6', post);
+            expect(res.status).toBe(HTTP_CODES.NOT_FOUND_404);
+        });
+    });
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items[0]).toEqual(resPost.body)
-    })
-    it('- PUT shouldn\'t update with invalid blog input data 401', async () => {
-        const newBlog: BlogInputType = {
-            name: 'blog name',
-            description: 'blog description',
-            websiteUrl: 'http://someValidUrl.com',
-        }
+    describe('GET /blogs/:id', () => {
+        it('should return 404 for non-existent blog', async () => {
+            const res = await blogRepository.getBlogById('67462ce1b0650d27e4ecfcf6')
 
-        const blogDataToUpdate: BlogInputType = {
-            name: createString(16),
-            description: createString(501),
-            websiteUrl: createString(101)
-        }
+            expect(res.status).toBe(HTTP_CODES.NOT_FOUND_404)
+        })
 
-        const resPost = await req
-            .post(SETTINGS.PATH.BLOGS)
-            .set({'Authorization': getValidCredentials()})
-            .send(newBlog)
-            .expect(HTTP_CODES.CREATED_201)
+        it('should return blog by id', async () => {
+            const blogInput = blogTestFactory.createBlogInputDto()
 
-        const resPut = await req
-            .put(SETTINGS.PATH.BLOGS + '/' + resPost.body.id)
-            .set({'Authorization': 'invalid credentials'})
-            .send(blogDataToUpdate)
-            .expect(HTTP_CODES.UNAUTHORIZED_401)
+            const createRes = await blogRepository.createBlog(blogInput)
+            const getRes = await blogRepository.getBlogById(createRes.body.id)
 
-        const resGet = await req.get(SETTINGS.PATH.BLOGS)
-        expect(resGet.body.items[0]).toEqual(resPost.body)
-    })
+            expect(getRes.status).toBe(HTTP_CODES.OK_200)
+            expectBlogsToMatch(getRes.body, createRes.body)
+        })
+    });
+
+    describe('POST /blogs', () => {
+        it('should create blog with valid input', async () => {
+            const blogInput = blogTestFactory.createBlogInputDto()
+
+            const res = await blogRepository.createBlog(blogInput)
+
+            expect(res.status).toBe(HTTP_CODES.CREATED_201)
+            expectBlogToMatchInput(res.body, blogInput)
+            expectValidBlogShape(res.body)
+        })
+
+        it('should return 401 without authentication', async () => {
+            const blogInput = blogTestFactory.createBlogInputDto()
+
+            const res = await blogRepository.createBlog(blogInput, false)
+
+            expect(res.status).toBe(HTTP_CODES.UNAUTHORIZED_401)
+            const blogs = await blogRepository.getAllBlogs()
+            expect(blogs.body.items).toHaveLength(0)
+        })
+
+        it('should return 400 for invalid input', async () => {
+            const invalidBlog = blogTestFactory.createInvalidBlogInputDto()
+
+            const res = await blogRepository.createBlog(invalidBlog)
+
+            expect(res.status).toBe(HTTP_CODES.BAD_REQUEST_400)
+            expectValidationErrors(res.body, ['name', 'description', 'websiteUrl'])
+        })
+    });
+
+    describe('PUT /blogs/:id', () => {
+        it('should update blog with valid input', async () => {
+            const blog = await createTestBlog();
+            const updateDto = blogTestFactory.createBlogInputDto({
+                name: 'name updated',
+                description: 'blog description updated',
+                websiteUrl: 'http://someUrlUpdated.com',
+            });
+
+            const updateRes = await blogRepository.updateBlog(blog.id, updateDto);
+
+            expect(updateRes.status).toBe(HTTP_CODES.NO_CONTENT_204);
+            const getRes = await blogRepository.getAllBlogs();
+            expectBlogToMatchInput(getRes.body.items[0], updateDto);
+        });
+
+        it('should return 404 for non-existent blog', async () => {
+            const updateDto = blogTestFactory.createBlogInputDto();
+
+            const res = await blogRepository.updateBlog('67462ce1b0650d27e4ecfcf6', updateDto);
+
+            expect(res.status).toBe(HTTP_CODES.NOT_FOUND_404);
+        });
+
+        it('should return 401 without authentication', async () => {
+            const blog = await createTestBlog();
+            const updateDto = blogTestFactory.createBlogInputDto();
+
+            const res = await blogRepository.updateBlog(blog.id, updateDto, false);
+
+            expect(res.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+            const getRes = await blogRepository.getAllBlogs();
+            expectBlogsToMatch(getRes.body.items[0], blog);
+        });
+
+        describe('input validation', () => {
+            let blog: BlogViewModel;
+
+            beforeEach(async () => {
+                blog = await createTestBlog();
+            });
+
+            it('should return 400 when all fields are invalid', async () => {
+                const invalidInput = {
+                    name: createString(16),
+                    description: createString(501),
+                    websiteUrl: 'invalid-url'
+                };
+
+                const response = await blogRepository.updateBlog(blog.id, invalidInput);
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(3);
+                expect(response.body.errorsMessages).toContainEqual({
+                    message: expect.any(String),
+                    field: 'name'
+                });
+                expect(response.body.errorsMessages).toContainEqual({
+                    message: expect.any(String),
+                    field: 'description'
+                });
+                expect(response.body.errorsMessages).toContainEqual({
+                    message: expect.any(String),
+                    field: 'websiteUrl'
+                });
+
+                const getRes = await blogRepository.getAllBlogs();
+                expectBlogsToMatch(getRes.body.items[0], blog);
+            });
+
+            it('should return 400 when name is too long', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    name: createString(16)
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('name');
+            });
+
+            it('should return 400 when name is empty', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    name: ''
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('name');
+            });
+
+            it('should return 400 when description is too long', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    description: createString(501)
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('description');
+            });
+
+            it('should return 400 when description is empty', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    description: ''
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('description');
+            });
+
+            it('should return 400 when websiteUrl is invalid', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    websiteUrl: 'invalid-url'
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('websiteUrl');
+            });
+
+            it('should return 400 when websiteUrl is empty', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    websiteUrl: ''
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('websiteUrl');
+            });
+
+            it('should return 400 when websiteUrl exceeds maximum length', async () => {
+                const response = await blogRepository.updateBlog(blog.id, {
+                    ...blogTestFactory.createBlogInputDto(),
+                    websiteUrl: `http://${createString(100)}.com`
+                });
+
+                expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+                expect(response.body.errorsMessages).toHaveLength(1);
+                expect(response.body.errorsMessages[0].field).toBe('websiteUrl');
+            });
+        });
+    });
+
+    describe('DELETE /blogs/:id', () => {
+        it('should delete existing blog', async () => {
+            const blog = await createTestBlog()
+
+            const deleteRes = await blogRepository.deleteBlog(blog.id)
+
+            expect(deleteRes.status).toBe(HTTP_CODES.NO_CONTENT_204)
+            const getRes = await blogRepository.getAllBlogs()
+            expect(getRes.body.items).toHaveLength(0)
+        })
+
+        it('should return 404 for non-existent blog', async () => {
+            const res = await blogRepository.deleteBlog('67462ce1b0650d27e4ecfcf6')
+
+            expect(res.status).toBe(HTTP_CODES.NOT_FOUND_404)
+        })
+
+        it('should return 401 without authentication', async () => {
+            const blog = await createTestBlog()
+
+            const res = await blogRepository.deleteBlog(blog.id, false)
+
+            expect(res.status).toBe(HTTP_CODES.UNAUTHORIZED_401)
+            const getRes = await blogRepository.getAllBlogs()
+            expect(getRes.body.items).toHaveLength(1)
+        })
+    });
 })
