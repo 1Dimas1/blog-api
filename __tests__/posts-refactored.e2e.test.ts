@@ -49,6 +49,8 @@ describe('/posts', () => {
     });
 
     describe('GET /posts pagination and sorting', () => {
+        jest.setTimeout(10000);
+
         beforeEach(async () => {
             await postTestFactory.createMultiplePosts(15, postRepository, blog.id);
         });

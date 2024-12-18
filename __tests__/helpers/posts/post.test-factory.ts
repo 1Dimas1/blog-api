@@ -35,7 +35,7 @@ export const postTestFactory = {
         return response.body;
     },
 
-    async createMultiplePosts(count: number, repository: PostTestRepository, blogId: string, delayMs: number = 100): Promise<PostDto[]> {
+    async createMultiplePosts(count: number, repository: PostTestRepository, blogId: string, delayMs: number = 10): Promise<PostDto[]> {
         const posts: PostDto[] = [];
 
         for (let i = 1; i <= count; i++) {
