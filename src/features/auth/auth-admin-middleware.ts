@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import {HTTP_CODES, SETTINGS} from "../../settings";
+import {SETTINGS} from "../../settings";
+import {HTTP_CODES} from "../../common/http.statuses";
 
-export const authorisationMiddleware = (
+export const authAdminMiddleware = (
     req: Request,
     res: Response,
     next: NextFunction,

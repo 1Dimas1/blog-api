@@ -2,11 +2,11 @@ import {NextFunction, Response} from "express";
 import {RequestWithParams} from "../types/request.type";
 import {BlogDBType, BlogIdParams} from "../../features/blogs/blog.type";
 import {blogsRepository} from "../../features/blogs/blogs-repository";
-import {HTTP_CODES} from "../../settings";
 import {PostDBType, URIParamsPostIdType} from "../../features/posts/post.type";
 import {postsRepository} from "../../features/posts/posts-repository";
 import {usersRepository} from "../../features/users/users-repository";
 import {URIParamsUserIdType, UserDBType} from "../../features/users/user.type";
+import {HTTP_CODES} from "../http.statuses";
 
 export const validateBlogExistsMiddleware = async (
     req: RequestWithParams<BlogIdParams>,

@@ -2,7 +2,7 @@ import {PostTestRepository} from "./helpers/posts/post.test-repository";
 import {BlogTestRepository} from "./helpers/blogs/blog.test-repository";
 import {BlogViewModel} from "../src/features/blogs/blog.type";
 import {createString, req} from "./helpers/test.helpers";
-import {HTTP_CODES, SETTINGS} from "../src/settings";
+import {SETTINGS} from "../src/settings";
 import {blogTestFactory} from "./helpers/blogs/blog.test-factory";
 import {postTestFactory} from "./helpers/posts/post.test-factory";
 import {
@@ -11,8 +11,9 @@ import {
     expectPostsEqual,
     expectValidationErrors,
     expectValidPostShape
-} from "./helpers/posts/post.tes-helpers";
+} from "./helpers/posts/post.test-helpers";
 import {PostDto, PostsResponse} from "./helpers/posts/post.test.type";
+import {HTTP_CODES} from "../src/common/http.statuses";
 
 describe('/posts', () => {
     let postRepository: PostTestRepository;

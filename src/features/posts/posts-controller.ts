@@ -1,5 +1,4 @@
 import {Response} from "express";
-import {HTTP_CODES} from "../../settings";
 import {PostInputType, PostViewType, PostsPaginator, QueryPostType} from "./post.type";
 import {RequestWithBody, RequestWithParams, RequestWithQuery} from "../../common/types/request.type";
 import {BlogIdParams} from "../blogs/blog.type";
@@ -7,6 +6,7 @@ import {paginationPostQueries} from "../../common/helpers/pagination-values";
 import {postsService} from "./posts-service";
 import {postsQueryRepository} from "./posts-queryRepository";
 import {postsQueryService} from "./posts-queryService";
+import {HTTP_CODES} from "../../common/http.statuses";
 
 export const postsController = {
     async getPosts(req: RequestWithQuery<QueryPostType>, res: Response<PostsPaginator>) {

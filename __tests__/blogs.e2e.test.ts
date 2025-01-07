@@ -1,4 +1,4 @@
-import {HTTP_CODES, SETTINGS} from "../src/settings";
+import {SETTINGS} from "../src/settings";
 import {BlogTestRepository} from "./helpers/blogs/blog.test-repository";
 import {createString, req} from "./helpers/test.helpers";
 import {blogTestFactory} from "./helpers/blogs/blog.test-factory";
@@ -11,6 +11,7 @@ import {
 } from "./helpers/blogs/blog.test-helpers";
 import {BlogsResponse} from "./helpers/blogs/blog.test.type";
 import {BlogViewModel} from "../src/features/blogs/blog.type";
+import {HTTP_CODES} from "../src/common/http.statuses";
 
 describe('/blogs', () => {
     let blogRepository: BlogTestRepository;

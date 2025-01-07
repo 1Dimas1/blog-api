@@ -1,12 +1,12 @@
-import {HTTP_CODES, SETTINGS} from "../src/settings";
+import {SETTINGS} from "../src/settings";
 import {authTestFactory} from "./helpers/auth/auth.test-factory";
 import {UserDto} from "./helpers/users/user.test.type";
-import {LoginInputDto} from "./helpers/auth/auth.test.type";
 import {AuthTestRepository} from "./helpers/auth/auth.test-repository";
 import {UserTestRepository} from "./helpers/users/user.test-repository";
 import {req} from "./helpers/test.helpers";
+import {HTTP_CODES} from "../src/common/http.statuses";
 
-describe('auth/login', () => {
+describe('auth', () => {
     let authRepository: AuthTestRepository;
     let userRepository: UserTestRepository;
 
@@ -16,11 +16,10 @@ describe('auth/login', () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204);
     });
 
-    describe('successful login', () => {
+    describe('POST /auth/login', () => {
         let user: UserDto;
 
         beforeEach(async () => {
-            // Create a user first
             const createResponse = await userRepository.createUser({
                 login: 'testuser',
                 password: 'password123',
@@ -29,7 +28,7 @@ describe('auth/login', () => {
             user = createResponse.body;
         });
 
-        it('should login with correct email and password', async () => {
+        it('should return JWT token when logging in with email', async () => {
             const loginInput = authTestFactory.createLoginInputDto({
                 loginOrEmail: 'test@example.com',
                 password: 'password123'
@@ -37,10 +36,13 @@ describe('auth/login', () => {
 
             const response = await authRepository.login(loginInput);
 
-            expect(response.status).toBe(HTTP_CODES.NO_CONTENT_204);
+            expect(response.status).toBe(HTTP_CODES.OK_200);
+            expect(response.body).toEqual({
+                accessToken: expect.any(String)
+            });
         });
 
-        it('should login with correct login and password', async () => {
+        it('should return JWT token when logging in with login', async () => {
             const loginInput = authTestFactory.createLoginInputDto({
                 loginOrEmail: 'testuser',
                 password: 'password123'
@@ -48,59 +50,13 @@ describe('auth/login', () => {
 
             const response = await authRepository.login(loginInput);
 
-            expect(response.status).toBe(HTTP_CODES.NO_CONTENT_204);
-        });
-    });
-
-    describe('invalid credentials', () => {
-        let user: UserDto;
-
-        beforeEach(async () => {
-            // Create a user first
-            const createResponse = await userRepository.createUser({
-                login: 'testuser',
-                password: 'password123',
-                email: 'test@example.com'
+            expect(response.status).toBe(HTTP_CODES.OK_200);
+            expect(response.body).toEqual({
+                accessToken: expect.any(String)
             });
-            user = createResponse.body;
         });
 
-        it('should return 401 with incorrect password', async () => {
-            const loginInput = authTestFactory.createLoginInputDto({
-                loginOrEmail: 'test@example.com',
-                password: 'wrongpassword'
-            });
-
-            const response = await authRepository.login(loginInput);
-
-            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
-        });
-
-        it('should return 401 with non-existent email', async () => {
-            const loginInput = authTestFactory.createLoginInputDto({
-                loginOrEmail: 'nonexistent@example.com',
-                password: 'password123'
-            });
-
-            const response = await authRepository.login(loginInput);
-
-            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
-        });
-
-        it('should return 401 with non-existent login', async () => {
-            const loginInput = authTestFactory.createLoginInputDto({
-                loginOrEmail: 'nonexistentuser',
-                password: 'password123'
-            });
-
-            const response = await authRepository.login(loginInput);
-
-            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
-        });
-    });
-
-    describe('input validation', () => {
-        it('should return 400 when loginOrEmail is empty', async () => {
+        it('should return 400 with empty login or email', async () => {
             const loginInput = authTestFactory.createLoginInputDto({
                 loginOrEmail: '',
                 password: 'password123'
@@ -115,7 +71,7 @@ describe('auth/login', () => {
             });
         });
 
-        it('should return 400 when password is empty', async () => {
+        it('should return 400 with empty password', async () => {
             const loginInput = authTestFactory.createLoginInputDto({
                 loginOrEmail: 'test@example.com',
                 password: ''
@@ -130,62 +86,73 @@ describe('auth/login', () => {
             });
         });
 
-        it('should return 400 when both fields are missing', async () => {
-            const response = await authRepository.login({} as LoginInputDto);
+        it('should return 401 with incorrect password', async () => {
+            const loginInput = authTestFactory.createLoginInputDto({
+                loginOrEmail: 'test@example.com',
+                password: 'wrongpassword'
+            });
 
-            expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
-            expect(response.body.errorsMessages).toHaveLength(2);
-            expect(response.body.errorsMessages).toContainEqual({
-                message: expect.any(String),
-                field: 'loginOrEmail'
+            const response = await authRepository.login(loginInput);
+            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+        });
+
+        it('should return 401 with non-existent user', async () => {
+            const loginInput = authTestFactory.createLoginInputDto({
+                loginOrEmail: 'nonexistent@example.com',
+                password: 'password123'
             });
-            expect(response.body.errorsMessages).toContainEqual({
-                message: expect.any(String),
-                field: 'password'
-            });
+
+            const response = await authRepository.login(loginInput);
+            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
         });
     });
 
-    describe('rate limiting', () => {
+    describe('GET /auth/me', () => {
         let user: UserDto;
+        let accessToken: string;
 
         beforeEach(async () => {
+
             const createResponse = await userRepository.createUser({
                 login: 'testuser',
                 password: 'password123',
                 email: 'test@example.com'
             });
             user = createResponse.body;
-        });
 
-        it('should handle multiple consecutive login attempts', async () => {
-            const loginInput = authTestFactory.createLoginInputDto({
-                loginOrEmail: 'test@example.com',
+            const loginResponse = await authRepository.login({
+                loginOrEmail: 'testuser',
                 password: 'password123'
             });
-
-            // Multiple successful logins
-            for (let i = 0; i < 5; i++) {
-                const response = await authRepository.login(loginInput);
-                expect(response.status).toBe(HTTP_CODES.NO_CONTENT_204);
-                // Add small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
+            accessToken = loginResponse.body.accessToken;
         });
 
-        it('should handle multiple failed login attempts', async () => {
-            const loginInput = authTestFactory.createLoginInputDto({
-                loginOrEmail: 'test@example.com',
-                password: 'wrongpassword'
-            });
+        it('should return user information with valid token', async () => {
+            const response = await authRepository.getMe(accessToken);
 
-            // Multiple failed attempts
-            for (let i = 0; i < 5; i++) {
-                const response = await authRepository.login(loginInput);
-                expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
-                // Add small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 10));
-            }
+            expect(response.status).toBe(HTTP_CODES.OK_200);
+            expect(response.body).toEqual({
+                email: user.email,
+                login: user.login,
+                userId: expect.any(String)
+            });
+        });
+
+        it('should return 401 without token', async () => {
+            const response = await authRepository.getMe();
+            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+        });
+
+        it('should return 401 with invalid token', async () => {
+            const response = await authRepository.getMe('invalid_token');
+            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+        });
+
+        it('should return 401 with expired token', async () => {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await authRepository.getMe(accessToken);
+
+            expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
         });
     });
 });

@@ -1,8 +1,9 @@
 import {UserTestRepository} from "./helpers/users/user.test-repository";
 import {req} from "./helpers/test.helpers";
-import {HTTP_CODES, SETTINGS} from "../src/settings";
+import {SETTINGS} from "../src/settings";
 import {userTestFactory} from "./helpers/users/user.test-factory";
 import {UserDto, UsersResponse} from "./helpers/users/user.test.type";
+import {HTTP_CODES} from "../src/common/http.statuses";
 
 describe('/users', () => {
     let userRepository: UserTestRepository;

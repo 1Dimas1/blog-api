@@ -1,10 +1,10 @@
 import {RequestWithBody, RequestWithParams, RequestWithQuery} from "../../common/types/request.type";
 import {Response} from "express";
 import {QueryUserType, URIParamsUserIdType, UserInputType, UserOutPutType, UsersPaginator} from "./user.type";
-import {HTTP_CODES} from "../../settings";
 import {paginationUserQueries} from "../../common/helpers/pagination-values";
 import {usersService} from "./users-service";
 import {usersQueryService} from "./users-queryService";
+import {HTTP_CODES} from "../../common/http.statuses";
 
 export const usersController = {
     async getUsers(req: RequestWithQuery<QueryUserType>, res: Response<UsersPaginator>){

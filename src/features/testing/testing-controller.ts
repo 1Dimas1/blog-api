@@ -1,6 +1,7 @@
 import {Request, Response} from 'express'
 import {blogCollection, postCollection, userCollection} from "../../db/db";
-import {HTTP_CODES} from "../../settings";
+
+import {HTTP_CODES} from "../../common/http.statuses";
 
 export const testingController = {
     async clearDB(req: Request, res: Response) {

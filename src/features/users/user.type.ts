@@ -19,11 +19,6 @@ export type UserInputType = {
     password: string,
 }
 
-export type LoginUserInputType = {
-    loginOrEmail: string,
-    password: string,
-}
-
 export type UsersPaginator = {
     pagesCount: number,
     page: number,

@@ -1,5 +1,4 @@
 import {Response} from 'express'
-import {HTTP_CODES} from "../../settings";
 import {
     BlogInputType, BlogViewModel, BlogsPaginator, QueryBlogDto,
     BlogIdParams,
@@ -24,6 +23,7 @@ import {blogsQueryService} from "./blogs-queryService";
 import {blogsQueryRepository} from "./blogs-queryRepository";
 import {postsQueryService} from "../posts/posts-queryService";
 import {postsService} from "../posts/posts-service";
+import {HTTP_CODES} from "../../common/http.statuses";
 
 export const blogsController = {
     async getBlogs(req: RequestWithQuery<QueryBlogDto>, res: Response<BlogsPaginator>) {

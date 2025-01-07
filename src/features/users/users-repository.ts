@@ -12,6 +12,15 @@ export const usersRepository = {
         });
     },
 
+    async doesExistById(id: string): Promise<boolean> {
+        const user: Promise<UserDBType | null> = this.findUserById(id)
+        if (!user) {
+            return false;
+        }
+
+        return true;
+    },
+
     async findUserById(id: string): Promise<UserDBType | null> {
         return userCollection.findOne({_id: new ObjectId(id)});
     },

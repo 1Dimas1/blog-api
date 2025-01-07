@@ -7,7 +7,7 @@ import {
     postTitleValidator
 } from "../../common/validation/field-validators";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
-import {authorisationMiddleware} from "../auth/authorisation-middleware";
+import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {validateBlogExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
 
 const blogsRouter = Router();
@@ -19,7 +19,7 @@ blogsRouter.get('/:id',
     blogsController.getBlogById);
 
 blogsRouter.post('/',
-    authorisationMiddleware,
+    authAdminMiddleware,
     blogNameValidator,
     blogDescriptionValidator,
     blogWebsiteUrlValidator,
@@ -30,7 +30,7 @@ blogsRouter.get('/:id/posts',
     blogsController.getPostsByBlogId);
 
 blogsRouter.post('/:id/posts',
-    authorisationMiddleware,
+    authAdminMiddleware,
     postTitleValidator,
     postShortDescriptionValidator,
     postContentValidator,
@@ -38,7 +38,7 @@ blogsRouter.post('/:id/posts',
     blogsController.createPostByBlogId);
 
 blogsRouter.put('/:id',
-    authorisationMiddleware,
+    authAdminMiddleware,
     validateBlogExistsMiddleware,
     blogNameValidator,
     blogDescriptionValidator,
@@ -47,7 +47,7 @@ blogsRouter.put('/:id',
     blogsController.updateBlog);
 
 blogsRouter.delete('/:id',
-    authorisationMiddleware,
+    authAdminMiddleware,
     validateBlogExistsMiddleware,
     blogsController.deleteBlog);
 

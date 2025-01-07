@@ -9,4 +9,12 @@ export class AuthTestRepository {
             .post(SETTINGS.PATH.AUTH.concat('/login'))
             .send(dto);
     }
+
+    async getMe(accessToken?: string) {
+        const request = this.req.get(SETTINGS.PATH.AUTH.concat('/me'));
+        if (accessToken) {
+            request.set('Authorization', `Bearer ${accessToken}`);
+        }
+        return request;
+    }
 }

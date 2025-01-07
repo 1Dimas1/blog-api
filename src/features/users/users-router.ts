@@ -1,6 +1,6 @@
 import {Router} from "express";
 import {usersController} from "./users-controller";
-import {authorisationMiddleware} from "../auth/authorisation-middleware";
+import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {userEmailValidator, userLoginValidator, userPasswordValidator} from "../../common/validation/field-validators";
 import {validateUserExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
@@ -8,11 +8,11 @@ import {validateUserExistsMiddleware} from "../../common/middlewares/id-params-v
 const usersRouter = Router();
 
 usersRouter.get('/',
-    authorisationMiddleware,
+    authAdminMiddleware,
     usersController.getUsers)
 
 usersRouter.post('/',
-    authorisationMiddleware,
+    authAdminMiddleware,
     userLoginValidator,
     userEmailValidator,
     userPasswordValidator,
@@ -20,7 +20,7 @@ usersRouter.post('/',
     usersController.createUser)
 
 usersRouter.delete('/:id',
-    authorisationMiddleware,
+    authAdminMiddleware,
     validateUserExistsMiddleware,
     usersController.deleteUser)
 

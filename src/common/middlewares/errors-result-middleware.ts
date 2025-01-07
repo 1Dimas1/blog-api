@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 import { NextFunction, Request, Response } from "express";
-import {HTTP_CODES} from "../../settings";
+
+import {HTTP_CODES} from "../http.statuses";
 
 export const errorResultMiddleware = (
     req: Request,

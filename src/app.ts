@@ -1,11 +1,12 @@
 import express from 'express'
-import {HTTP_CODES, SETTINGS} from "./settings";
+import {SETTINGS} from "./settings";
 import testingRouter from "./features/testing/testing.routes";
 import blogsRouter from "./features/blogs/blogs-router";
 import postsRouter from "./features/posts/posts-router";
 import usersRouter from "./features/users/users-router";
 import {authController} from "./features/auth/auth-controller";
 import authRouter from "./features/auth/auth-router";
+import {HTTP_CODES} from "./common/http.statuses";
 
 export const app = express()
 app.use(express.json())
