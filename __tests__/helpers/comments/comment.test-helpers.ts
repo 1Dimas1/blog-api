@@ -77,3 +77,33 @@ export function expectCommentStructure(comment: CommentDto) {
         createdAt: expect.any(String)
     });
 }
+
+export function expectExactCommentData(responseComment: CommentDto, originalComment: CommentDto) {
+    expect(responseComment).toEqual({
+        id: originalComment.id,
+        content: originalComment.content,
+        commentatorInfo: {
+            userId: originalComment.commentatorInfo.userId,
+            userLogin: originalComment.commentatorInfo.userLogin
+        },
+        createdAt: originalComment.createdAt
+    });
+}
+
+export function expectCommentDataStructure(comment: CommentDto) {
+    expect(comment).toEqual({
+        id: expect.any(String),
+        content: expect.any(String),
+        commentatorInfo: {
+            userId: expect.any(String),
+            userLogin: expect.any(String)
+        },
+        createdAt: expect.any(String)
+    });
+
+    expect(new Date(comment.createdAt).toISOString()).toBe(comment.createdAt);
+}
+
+export function getNonExistentCommentId(): string {
+    return '647f76db548418d53ab66666';
+}

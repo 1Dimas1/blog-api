@@ -1,6 +1,6 @@
 import {
-    createUserAndGetToken,
-    expectCommentStructure,
+    createUserAndGetToken, expectCommentDataStructure,
+    expectCommentStructure, expectExactCommentData, getNonExistentCommentId,
     setupTest,
     TestContext
 } from "./helpers/comments/comment.test-helpers";
@@ -21,7 +21,7 @@ describe('Comments', () => {
 
     describe('GET /posts/{postId}/comments', () => {
         it('should return empty array when no comments exist', async () => {
-            const response = await commentRepository.getComments(testContext.post.id);
+            const response  = await commentRepository.getComments(testContext.post.id);
 
             expect(response.status).toBe(HTTP_CODES.OK_200);
             expect(response.body.items).toHaveLength(0);
@@ -88,6 +88,38 @@ describe('Comments', () => {
             );
 
             expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+        });
+    });
+
+    describe('GET /comments/:id', () => {
+        let comment: CommentDto;
+
+        beforeEach(async () => {
+            comment = await commentTestFactory.createComment(
+                commentRepository,
+                testContext.post.id,
+                testContext.accessToken
+            );
+        });
+
+        it('should return comment by id', async () => {
+            const response = await commentRepository.getCommentById(comment.id);
+
+            expect(response.status).toBe(HTTP_CODES.OK_200);
+            expectExactCommentData(response.body, comment);
+        });
+
+        it('should return 404 for non-existent comment id', async () => {
+            const response = await commentRepository.getCommentById(getNonExistentCommentId());
+
+            expect(response.status).toBe(HTTP_CODES.NOT_FOUND_404);
+        });
+
+        it('should return exact comment data structure', async () => {
+            const response = await commentRepository.getCommentById(comment.id);
+
+            expect(response.status).toBe(HTTP_CODES.OK_200);
+            expectCommentDataStructure(response.body);
         });
     });
 
