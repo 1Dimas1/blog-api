@@ -1,5 +1,5 @@
 import {SortDirection} from "mongodb";
-import {UserOutPutType, UsersPaginator} from "./user.type";
+import {UserViewModel, UsersPaginationViewModel} from "./user.type";
 import {buildFindUsersQuery} from "../../common/helpers/find-query-builders";
 import {usersQueryRepository} from "./users-queryRepository";
 
@@ -11,10 +11,10 @@ export const usersQueryService = {
         pageSize: number,
         searchLoginTerm: string | null,
         searchEmailTerm: string | null,
-    ): Promise<UsersPaginator> {
+    ): Promise<UsersPaginationViewModel> {
         const findUsersQuery = buildFindUsersQuery(searchLoginTerm, searchEmailTerm);
 
-        const users: UserOutPutType[] = await usersQueryRepository.getUsers(
+        const users: UserViewModel[] = await usersQueryRepository.getUsers(
             sortBy,
             sortDirection,
             pageNumber,

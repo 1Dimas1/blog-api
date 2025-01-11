@@ -1,18 +1,18 @@
 import {RequestWithBody, RequestWithParams, RequestWithQuery} from "../../common/types/request.type";
 import {Response} from "express";
-import {QueryUserType, URIParamsUserIdType, UserInputType, UserOutPutType, UsersPaginator} from "./user.type";
+import {QueryUserType, URIParamsUserIdType, UserInputType, UserViewModel, UsersPaginationViewModel} from "./user.type";
 import {paginationUserQueries} from "../../common/helpers/pagination-values";
 import {usersService} from "./users-service";
 import {usersQueryService} from "./users-queryService";
 import {HTTP_CODES} from "../../common/http.statuses";
 
 export const usersController = {
-    async getUsers(req: RequestWithQuery<QueryUserType>, res: Response<UsersPaginator>){
+    async getUsers(req: RequestWithQuery<QueryUserType>, res: Response<UsersPaginationViewModel>){
         const {sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm, searchEmailTerm} = paginationUserQueries(req)
-        const users: UsersPaginator = await usersQueryService.getUsers(sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm, searchEmailTerm)
+        const users: UsersPaginationViewModel = await usersQueryService.getUsers(sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm, searchEmailTerm)
         res.status(HTTP_CODES.OK_200).json(users)
     },
-    async createUser(req: RequestWithBody<UserInputType>, res: Response<UserOutPutType | ErrorResponse>){
+    async createUser(req: RequestWithBody<UserInputType>, res: Response<UserViewModel | ErrorResponse>){
         const duplicateCredential: string | null = await usersService.findDuplicateCredential(req.body.login, req.body.email)
         if (duplicateCredential) {
             res.status(HTTP_CODES.BAD_REQUEST_400).json({
@@ -26,7 +26,7 @@ export const usersController = {
             return;
         }
 
-        const newUser: UserOutPutType | null = await usersService.createUser(req.body)
+        const newUser: UserViewModel | null = await usersService.createUser(req.body)
         if(!newUser) {
             res.status(HTTP_CODES.NOT_FOUND_404)
             return;

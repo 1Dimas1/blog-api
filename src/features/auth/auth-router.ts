@@ -4,7 +4,7 @@ import {loginUserLoginOrEmailValidator, loginUserPasswordValidator} from "../../
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {authGuard} from "./auth-middleware";
 
-const authRouter = Router();
+const authRouter: Router = Router();
 
 authRouter.post('/login',
     loginUserLoginOrEmailValidator,

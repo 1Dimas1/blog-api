@@ -12,7 +12,7 @@ export type ExtensionType = {
     message: string;
 };
 
-export type Result<T> = {
+export type Result<T = null> = {
     status: ResultStatus;
     errorMessage?: string;
     extensions: ExtensionType[];

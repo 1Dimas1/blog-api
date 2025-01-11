@@ -1,5 +1,5 @@
 import {SortDirection} from "mongodb";
-import {BlogViewModel, BlogsPaginator} from "./blog.type";
+import {BlogViewModel, BlogsPaginatedViewModel} from "./blog.type";
 import {blogsQueryRepository} from "./blogs-queryRepository";
 
 export const blogsQueryService = {
@@ -9,7 +9,7 @@ export const blogsQueryService = {
         pageNumber: number,
         pageSize: number,
         searchNameTerm: string | null
-    ): Promise<BlogsPaginator> {
+    ): Promise<BlogsPaginatedViewModel> {
 
         const search = searchNameTerm
             ? {name: {$regex: searchNameTerm, $options: 'i'}}

@@ -1,5 +1,5 @@
 import {ObjectId, SortDirection} from "mongodb";
-import {PostViewType, PostsPaginator} from "./post.type";
+import {PostViewType, PostsPaginatedViewModel} from "./post.type";
 import {postsQueryRepository} from "./posts-queryRepository";
 
 export const postsQueryService = {
@@ -9,7 +9,7 @@ export const postsQueryService = {
         pageNumber: number,
         pageSize: number,
         blogId: string | null = null,
-    ): Promise<PostsPaginator> {
+    ): Promise<PostsPaginatedViewModel> {
         const search = blogId
             ? {blogId: new ObjectId(blogId)}
             : {}

@@ -1,5 +1,5 @@
 import {ObjectId, SortDirection} from "mongodb";
-import {UserDBType, UserOutPutType} from "./user.type";
+import {UserDBType, UserViewModel} from "./user.type";
 import {userCollection} from "../../db/db";
 
 export const usersQueryRepository = {
@@ -9,7 +9,7 @@ export const usersQueryRepository = {
         pageNumber: number,
         pageSize: number,
         query: any
-    ): Promise<UserOutPutType[]> {
+    ): Promise<UserViewModel[]> {
         const users: UserDBType[] = await userCollection
             .find(query)
             .sort({[sortBy]: sortDirection})
@@ -21,11 +21,11 @@ export const usersQueryRepository = {
     async getUsersCount(query: any): Promise<number> {
         return userCollection.countDocuments(query)
     },
-    async findUserById(id: string): Promise<UserOutPutType | null> {
+    async findUserById(id: string): Promise<UserViewModel | null> {
         const user: UserDBType | null = await userCollection.findOne({_id: new ObjectId(id)});
         return user ? this._mapToOutput(user) : null;
     },
-    _mapToOutput(user: UserDBType): UserOutPutType {
+    _mapToOutput(user: UserDBType): UserViewModel {
         return {
             id: user._id.toString(),
             login: user.login,

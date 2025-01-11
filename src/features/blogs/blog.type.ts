@@ -1,4 +1,4 @@
-import { WithId, SortDirection } from "mongodb";
+import {SortDirection, WithId} from "mongodb";
 
 export type BlogInputType = {
     name: string,
@@ -20,7 +20,7 @@ export type BlogViewModel = BlogType & {
     id: string
 }
 
-export type BlogsPaginator = {
+export type BlogsPaginatedViewModel = {
     pagesCount: number,
     page: number,
     pageSize: number,
@@ -28,8 +28,8 @@ export type BlogsPaginator = {
     items: BlogViewModel[]
 }
 
-export type QueryBlogDto = {
-    searchNameTerm?: string | null,
+export type QueryBlogType = {
+    searchNameTerm?: string,
     sortBy?: string,
     sortDirection?: SortDirection,
     pageNumber?: string,

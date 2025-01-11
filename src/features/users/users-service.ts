@@ -1,18 +1,18 @@
 import {DeleteResult, InsertOneResult} from "mongodb";
-import {UserDBType, UserInputType, UserOutPutType, UserType} from "./user.type";
+import {UserDBType, UserInputType, UserViewModel, UserType} from "./user.type";
 import {usersRepository} from "./users-repository";
-import {hash} from 'bcrypt'
 import {usersQueryRepository} from "./users-queryRepository";
+import {bcryptService} from "../auth/bcrypt-service";
 
 export const usersService = {
-    async createUser(userData: UserInputType): Promise<UserOutPutType | null> {
+    async createUser(userData: UserInputType): Promise<UserViewModel | null> {
+        //TODO
         // const loginUser: UserDBType | null = await usersRepository.findByLoginOrEmail(userData.login);
         // const emailUser: UserDBType | null = await usersRepository.findByLoginOrEmail(userData.email);
         //  if (loginUser || emailUser) {
-        //
         //  }
 
-        const hashedPassword: string = await this.hashPassword(userData.password);
+        const hashedPassword: string = await bcryptService.hashPassword(userData.password);
 
         const newUser: UserType = {
             login: userData.login,
@@ -28,12 +28,6 @@ export const usersService = {
         const result: DeleteResult = await usersRepository.deleteUser(id)
         return result.deletedCount === 1
     },
-
-    async hashPassword(password: string): Promise<string> {
-        const saltRounds = 10;
-        return await hash(password, saltRounds);
-    },
-
     async findDuplicateCredential(login: string, email: string): Promise<string | null> {
         const loginUser: UserDBType | null = await usersRepository.findByLoginOrEmail(login);
         if (loginUser) {

@@ -9,7 +9,7 @@ export type UserType = {
 
 export type UserDBType = WithId<UserType>
 
-export type UserOutPutType = Omit<UserType, 'password'> & {
+export type UserViewModel = Omit<UserType, 'password'> & {
     id: string,
 }
 
@@ -19,12 +19,12 @@ export type UserInputType = {
     password: string,
 }
 
-export type UsersPaginator = {
+export type UsersPaginationViewModel = {
     pagesCount: number,
     page: number,
     pageSize: number,
     totalCount: number,
-    items: UserOutPutType[],
+    items: UserViewModel[],
 }
 
 export type QueryUserType = {
@@ -32,8 +32,8 @@ export type QueryUserType = {
     sortDirection?: SortDirection,
     pageNumber?: string,
     pageSize?: string,
-    searchLoginTerm?: string | null,
-    searchEmailTerm?: string | null,
+    searchLoginTerm?: string,
+    searchEmailTerm?: string,
 }
 
 export type URIParamsUserIdType = {

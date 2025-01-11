@@ -10,7 +10,7 @@ import {errorResultMiddleware} from "../../common/middlewares/errors-result-midd
 import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {validateBlogExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
 
-const blogsRouter = Router();
+const blogsRouter: Router = Router();
 
 blogsRouter.get('/', blogsController.getBlogs);
 

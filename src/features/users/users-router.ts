@@ -5,7 +5,7 @@ import {errorResultMiddleware} from "../../common/middlewares/errors-result-midd
 import {userEmailValidator, userLoginValidator, userPasswordValidator} from "../../common/validation/field-validators";
 import {validateUserExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
 
-const usersRouter = Router();
+const usersRouter: Router = Router();
 
 usersRouter.get('/',
     authAdminMiddleware,

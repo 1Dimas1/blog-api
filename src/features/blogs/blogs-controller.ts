@@ -1,6 +1,6 @@
 import {Response} from 'express'
 import {
-    BlogInputType, BlogViewModel, BlogsPaginator, QueryBlogDto,
+    BlogInputType, BlogViewModel, BlogsPaginatedViewModel, QueryBlogType,
     BlogIdParams,
 } from "./blog.type";
 import {
@@ -15,7 +15,7 @@ import {paginationBlogQueries, paginationPostQueries} from "../../common/helpers
 import {
     PostCreateByBlogIdInputType,
     PostViewType,
-    PostsPaginator,
+    PostsPaginatedViewModel,
     QueryPostType,
     PostInputType
 } from "../posts/post.type";
@@ -26,9 +26,9 @@ import {postsService} from "../posts/posts-service";
 import {HTTP_CODES} from "../../common/http.statuses";
 
 export const blogsController = {
-    async getBlogs(req: RequestWithQuery<QueryBlogDto>, res: Response<BlogsPaginator>) {
+    async getBlogs(req: RequestWithQuery<QueryBlogType>, res: Response<BlogsPaginatedViewModel>) {
         const {sortBy, sortDirection, pageNumber, pageSize, searchNameTerm} = paginationBlogQueries(req)
-        const blogs: BlogsPaginator = await blogsQueryService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
+        const blogs: BlogsPaginatedViewModel = await blogsQueryService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
         res.status(HTTP_CODES.OK_200).json(blogs)
     },
     async getBlogById(req: RequestWithParams<BlogIdParams>, res: Response<BlogViewModel>) {
@@ -39,14 +39,14 @@ export const blogsController = {
         }
         res.status(HTTP_CODES.OK_200).json(blog);
     },
-    async getPostsByBlogId(req: RequestWithParamsAndQuery<BlogIdParams, QueryPostType>, res: Response<PostsPaginator>)  {
+    async getPostsByBlogId(req: RequestWithParamsAndQuery<BlogIdParams, QueryPostType>, res: Response<PostsPaginatedViewModel>)  {
         const blog: BlogViewModel | null = await blogsQueryRepository.findBlogById(req.params.id)
         if (!blog) {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationPostQueries(req)
-        const posts: PostsPaginator = await postsQueryService.getPosts(sortBy, sortDirection, pageNumber, pageSize, req.params.id)
+        const posts: PostsPaginatedViewModel = await postsQueryService.getPosts(sortBy, sortDirection, pageNumber, pageSize, req.params.id)
         res.status(HTTP_CODES.OK_200).json(posts);
     },
     async createPostByBlogId(req: RequestWithParamsAndBody<BlogIdParams, PostCreateByBlogIdInputType>, res: Response<PostViewType>) {
