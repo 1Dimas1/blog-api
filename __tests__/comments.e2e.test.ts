@@ -1,13 +1,13 @@
 import {
     createUserAndGetToken, expectCommentDataStructure,
-    expectCommentStructure, expectExactCommentData, getNonExistentCommentId,
+    expectCommentStructure, expectCommentToMatchInput, expectExactCommentData, getNonExistentCommentId,
     setupTest,
     TestContext
 } from "./helpers/comments/comment.test-helpers";
 import {CommentTestRepository} from "./helpers/comments/comment.test-repository";
 import {req} from "./helpers/test.helpers";
 import {HTTP_CODES} from "../src/common/http.statuses";
-import {CommentDto} from "./helpers/comments/comment.test.type";
+import {CommentDto, CommentInputDto} from "./helpers/comments/comment.test.type";
 import {commentTestFactory} from "./helpers/comments/comment.test-factory";
 
 describe('Comments', () => {
@@ -41,6 +41,7 @@ describe('Comments', () => {
 
             it('should return comments with default pagination', async () => {
                 const response = await commentRepository.getComments(testContext.post.id);
+
                 expect(response.body.items).toHaveLength(5);
                 expect(response.body.page).toBe(1);
                 expect(response.body.pageSize).toBe(10);
@@ -59,28 +60,29 @@ describe('Comments', () => {
 
     describe('POST /posts/{postId}/comments', () => {
         it('should create comment with valid input', async () => {
+            const newComment: CommentInputDto = commentTestFactory.createValidCommentInputDto();
             const response = await commentRepository.createComment(
                 testContext.post.id,
-                commentTestFactory.createCommentInput(),
+                newComment,
                 testContext.accessToken
             );
 
             expect(response.status).toBe(HTTP_CODES.CREATED_201);
             expectCommentStructure(response.body);
-            expect(response.body.content).toBe('Test comment');
+            expect(response.body.content).toBe(newComment.content);
         });
 
         it('should return 401 without token', async () => {
             const response = await commentRepository.createComment(
                 testContext.post.id,
-                commentTestFactory.createCommentInput(),
+                commentTestFactory.createValidCommentInputDto(),
                 ''
             );
 
             expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
         });
 
-        it('should return 400 with invalid content', async () => {
+        it('should return 400 with empty content', async () => {
             const response = await commentRepository.createComment(
                 testContext.post.id,
                 { content: '' },
@@ -88,6 +90,76 @@ describe('Comments', () => {
             );
 
             expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+        });
+        it('should return 400 when content is less than 20 characters', async () => {
+            const shortContent = commentTestFactory.createCommentWithLength(19);
+
+            const response = await commentRepository.createComment(
+                testContext.post.id,
+                shortContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+            expect(response.body.errorsMessages).toEqual([{
+                message: expect.any(String),
+                field: 'content'
+            }]);
+        });
+        it('should return 400 when content is more than 300 characters', async () => {
+            const longContent = commentTestFactory.createCommentWithLength(301);
+
+            const response = await commentRepository.createComment(
+                testContext.post.id,
+                longContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+            expect(response.body.errorsMessages).toEqual([{
+                message: expect.any(String),
+                field: 'content'
+            }]);
+        });
+        it('should accept content exactly 20 characters', async () => {
+            const minContent = commentTestFactory.createCommentWithLength(20);
+
+            const response = await commentRepository.createComment(
+                testContext.post.id,
+                minContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.CREATED_201);
+            expectCommentToMatchInput(response.body, minContent, 'testuser');
+        });
+
+        it('should accept content exactly 300 characters', async () => {
+            const maxContent = commentTestFactory.createCommentWithLength(300);
+
+            const response = await commentRepository.createComment(
+                testContext.post.id,
+                maxContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.CREATED_201);
+            expectCommentToMatchInput(response.body, maxContent, 'testuser');
+        });
+
+        it('should accept content with length between 20 and 300 characters', async () => {
+            const validContent = {
+                content: 'This is a valid comment that should be accepted by the API because its length is within the allowed range.'
+            };
+
+            const response = await commentRepository.createComment(
+                testContext.post.id,
+                validContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.CREATED_201);
+            expectCommentToMatchInput(response.body, validContent, 'testuser');
         });
     });
 
@@ -137,7 +209,7 @@ describe('Comments', () => {
         it('should update own comment', async () => {
             const response = await commentRepository.updateComment(
                 comment.id,
-                { content: 'Updated comment' },
+                { content: 'Updated' + commentTestFactory.createValidCommentInputDto() },
                 testContext.accessToken
             );
 
@@ -149,7 +221,7 @@ describe('Comments', () => {
 
             const response = await commentRepository.updateComment(
                 comment.id,
-                { content: 'Updated comment' },
+                { content: 'Updated' + commentTestFactory.createValidCommentInputDto() },
                 otherUserToken
             );
 
@@ -159,11 +231,74 @@ describe('Comments', () => {
         it('should return 401 without token', async () => {
             const response = await commentRepository.updateComment(
                 comment.id,
-                { content: 'Updated comment' },
+                { content: 'Updated' + commentTestFactory.createValidCommentInputDto() },
                 ''
             );
 
             expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);
+        });
+
+        it('should return 400 when updating with content less than 20 characters', async () => {
+            const shortContent = commentTestFactory.createCommentWithLength(19);
+
+            const response = await commentRepository.updateComment(
+                comment.id,
+                shortContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+            expect(response.body.errorsMessages).toEqual([{
+                message: expect.any(String),
+                field: 'content'
+            }]);
+        });
+
+        it('should return 400 when updating with content more than 300 characters', async () => {
+            const longContent = commentTestFactory.createCommentWithLength(301);
+
+            const response = await commentRepository.updateComment(
+                comment.id,
+                longContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.BAD_REQUEST_400);
+            expect(response.body.errorsMessages).toEqual([{
+                message: expect.any(String),
+                field: 'content'
+            }]);
+        });
+
+        it('should accept update with content exactly 20 characters', async () => {
+            const minContent = commentTestFactory.createCommentWithLength(20);
+
+            const response = await commentRepository.updateComment(
+                comment.id,
+                minContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.NO_CONTENT_204);
+
+
+            const updatedComment = await commentRepository.getCommentById(comment.id);
+            expect(updatedComment.body.content).toBe(minContent.content);
+        });
+
+        it('should accept update with content exactly 300 characters', async () => {
+            const maxContent = commentTestFactory.createCommentWithLength(300);
+
+            const response = await commentRepository.updateComment(
+                comment.id,
+                maxContent,
+                testContext.accessToken
+            );
+
+            expect(response.status).toBe(HTTP_CODES.NO_CONTENT_204);
+
+            const updatedComment = await commentRepository.getCommentById(comment.id);
+            expect(updatedComment.body.content).toBe(maxContent.content);
         });
     });
 

@@ -9,7 +9,7 @@ import {SETTINGS} from "../../../src/settings";
 import {HTTP_CODES} from "../../../src/common/http.statuses";
 import {createTestBlog} from "../blogs/blog.test-helpers";
 import {postTestFactory} from "../posts/post.test-factory";
-import {CommentDto} from "./comment.test.type";
+import {CommentDto, CommentInputDto} from "./comment.test.type";
 
 export type TestContext = {
     user: UserDto
@@ -37,8 +37,8 @@ export async function setupTest(): Promise<TestContext> {
         password: 'password123'
     });
 
-    const blog = await createTestBlog();
-    const post = await postTestFactory.createPost(postRepository, blog.id);
+    const blog: BlogDto = await createTestBlog();
+    const post: PostDto = await postTestFactory.createPost(postRepository, blog.id);
 
     return {
         user: user.body,
@@ -102,6 +102,28 @@ export function expectCommentDataStructure(comment: CommentDto) {
     });
 
     expect(new Date(comment.createdAt).toISOString()).toBe(comment.createdAt);
+}
+
+export function expectCommentToMatchInput(
+    comment: CommentDto,
+    input: CommentInputDto,
+    userLogin: string
+): void {
+    expect(comment).toEqual({
+        id: expect.any(String),
+        content: input.content,
+        commentatorInfo: {
+            userId: expect.any(String),
+            userLogin: userLogin
+        },
+        createdAt: expect.any(String)
+    });
+
+    expect(comment.content).toBe(input.content);
+    expect(comment.commentatorInfo.userLogin).toBe(userLogin);
+
+    const createdAtDate = new Date(comment.createdAt);
+    expect(createdAtDate.toISOString()).toBe(comment.createdAt);
 }
 
 export function getNonExistentCommentId(): string {

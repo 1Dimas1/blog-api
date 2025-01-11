@@ -2,9 +2,15 @@ import {CommentDto, CommentInputDto} from "./comment.test.type";
 import {CommentTestRepository} from "./comment.test-repository";
 
 export const commentTestFactory = {
-    createCommentInput(content: string = 'Test comment'): CommentInputDto {
+    createCommentWithLength(length: number): CommentInputDto {
         return {
-            content
+            content: 'a'.repeat(length)
+        }
+    },
+
+    createValidCommentInputDto(): CommentInputDto {
+        return {
+            content: 'This is a valid comment with proper length.'
         }
     },
 
@@ -12,11 +18,10 @@ export const commentTestFactory = {
         repository: CommentTestRepository,
         postId: string,
         token: string,
-        content?: string
     ): Promise<CommentDto> {
         const response = await repository.createComment(
             postId,
-            this.createCommentInput(content),
+            this.createValidCommentInputDto(),
             token
         );
         return response.body;
@@ -34,7 +39,6 @@ export const commentTestFactory = {
                 repository,
                 postId,
                 token,
-                `Comment ${i}`
             );
             comments.push(comment);
             // Add delay between creations for sorting tests
