@@ -65,3 +65,8 @@ export const blogIdValidator = body('blogId')
         }
         return true;
     })
+
+export const commentContentValidator = body('content')
+    .isString().notEmpty().trim().withMessage('content is required')
+    .isLength({min: 20, max: 300})
+    .withMessage('content should contain 20 - 300 symbols')
