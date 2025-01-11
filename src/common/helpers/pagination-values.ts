@@ -1,10 +1,11 @@
-import {QueryBlogDto} from "../../features/blogs/blog.type";
-import {RequestWithQuery} from "../types/request.type";
+import {QueryBlogType} from "../../features/blogs/blog.type";
+import {RequestWithParamsAndQuery, RequestWithQuery} from "../types/request.type";
 import {SortDirection} from "mongodb";
-import {QueryPostType} from "../../features/posts/post.type";
+import {PostIdParams, QueryPostType} from "../../features/posts/post.type";
 import {QueryUserType} from "../../features/users/user.type";
+import {QueryCommentType} from "../../features/comments/comment.type";
 
-export const paginationBlogQueries = (req: RequestWithQuery<QueryBlogDto>) => {
+export const paginationBlogQueries = (req: RequestWithQuery<QueryBlogType>) => {
     let searchNameTerm: string | null = req.query.searchNameTerm ? req.query.searchNameTerm.toString() : null
 
     let sortBy: string =  req.query.sortBy ? req.query.sortBy.toString() : 'createdAt'
@@ -38,4 +39,16 @@ export const paginationUserQueries = (req: RequestWithQuery<QueryUserType>) => {
     let searchEmailTerm: string | null = req.query.searchEmailTerm ? req.query.searchEmailTerm.toString() : null
 
     return {sortBy, sortDirection, pageNumber, pageSize, searchLoginTerm, searchEmailTerm}
+}
+
+export const paginationCommentQueries = (req: RequestWithParamsAndQuery<PostIdParams, QueryCommentType>) => {
+
+    const postId: string = req.params.id.toString();
+    let sortBy: string =  req.query.sortBy ? req.query.sortBy.toString() : 'createdAt'
+    let sortDirection: SortDirection  =
+        req.query.sortDirection && req.query.sortDirection.toString() == 'asc' ? 'asc' : 'desc'
+    let pageNumber: number = req.query.pageNumber ? +req.query.pageNumber : 1
+    let pageSize: number = req.query.pageSize ? +req.query.pageSize : 10
+
+    return {postId, sortBy, sortDirection, pageNumber, pageSize}
 }
