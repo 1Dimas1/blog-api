@@ -47,10 +47,14 @@ export type QueryPostType = {
     pageSize?: string
 }
 
-export type PostsPaginator = {
+export type PostsPaginatedViewModel = {
     pagesCount: number,
     page: number,
     pageSize: number,
     totalCount: number,
     items: PostViewType[]
+}
+
+export type PostIdParams = {
+    id: string
 }
