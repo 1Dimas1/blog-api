@@ -20,5 +20,6 @@ export const SETTINGS = {
     DB_NAME: process.env.DB_NAME,
     BLOG_COLLECTION_NAME: 'blogs',
     POST_COLLECTION_NAME: 'posts',
-    USER_COLLECTION_NAME: 'users'
+    USER_COLLECTION_NAME: 'users',
+    COMMENT_COLLECTION_NAME: 'comments'
 }
