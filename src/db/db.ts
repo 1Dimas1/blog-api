@@ -1,8 +1,8 @@
 import {Collection, Db, MongoClient} from "mongodb";
-import {BlogDBType, BlogType} from "../features/blogs/blog.type";
-import {PostDBType, PostType} from "../features/posts/post.type";
+import {BlogType} from "../features/blogs/blog.type";
+import {PostType} from "../features/posts/post.type";
 import {SETTINGS} from "../settings";
-import {UserDBType, UserType} from "../features/users/user.type";
+import {UserType} from "../features/users/user.type";
 import {CommentType} from "../features/comments/comment.type";
 
 const url = SETTINGS.MONGO_URL
