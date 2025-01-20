@@ -5,11 +5,16 @@ export type UserType = {
     email: string,
     password: string,
     createdAt: string,
+    emailConfirmation: {
+        confirmationCode: string | null;
+        expirationDate: string | null;
+        isConfirmed: boolean;
+    };
 }
 
 export type UserDBType = WithId<UserType>
 
-export type UserViewModel = Omit<UserType, 'password'> & {
+export type UserViewModel = Omit<UserType, 'password' | 'emailConfirmation'> & {
     id: string,
 }
 

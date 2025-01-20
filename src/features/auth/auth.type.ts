@@ -10,3 +10,17 @@ export type UserInfoDto = {
     login: string;
     userId: string;
 }
+
+export type RegistrationInputDto = {
+    login: string;
+    password: string;
+    email: string;
+};
+
+export type RegistrationConfirmationDto = {
+    code: string;
+};
+
+export type RegistrationEmailResendingDto = {
+    email: string;
+};

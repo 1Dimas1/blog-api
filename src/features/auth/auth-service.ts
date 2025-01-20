@@ -1,12 +1,18 @@
-import {LoginSuccessDto, UserInfoDto} from "./auth.type";
+import {LoginSuccessDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {jwtService} from "./jwt-service";
 import {WithId} from "mongodb";
-import {UserDBType} from "../users/user.type";
+import {UserDBType, UserType} from "../users/user.type";
 import {usersRepository} from "../users/users-repository";
 import {bcryptService} from "./bcrypt-service";
+import {emailComposition} from "../../composition-root/email.composition";
+import {usersService} from "../users/users-service";
+import {v4 as uuidv4} from "uuid";
 
 export const authService = {
+
+    emailManager: emailComposition.getEmailManager(),
+
     async loginUser(loginOrEmail: string,password: string): Promise<Result<LoginSuccessDto | null>> {
         const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(loginOrEmail, password);
 
@@ -27,6 +33,114 @@ export const authService = {
             status: ResultStatus.Success,
             data: { accessToken },
             extensions: [],
+        };
+    },
+
+    async registerUser(input: RegistrationInputDto): Promise<Result> {
+        const existingUser: UserDBType | null = await usersRepository.findByLoginOrEmail(input.login)
+            || await usersRepository.findByLoginOrEmail(input.email);
+
+        if (existingUser) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "User already exists",
+                    field: existingUser.email === input.email ? "email" : "login"
+                }]
+            };
+        }
+
+        const newUser: UserType = await usersService.createUserEntity(input, false);
+        await usersRepository.createUser(newUser)
+
+        await this.emailManager.sendConfirmationEmail(newUser.email, newUser.emailConfirmation.confirmationCode!);
+
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
+        };
+    },
+
+    async confirmRegistration(code: string): Promise<Result> {
+        const user: UserDBType | null = await usersRepository.findByConfirmationCode(code);
+
+        if (!user) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Invalid confirmation code",
+                    field: "code"
+                }]
+            };
+        }
+
+        if (user.emailConfirmation.isConfirmed) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Email already confirmed",
+                    field: "code"
+                }]
+            };
+        }
+
+        if (user.emailConfirmation.expirationDate! < new Date().toISOString()) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Confirmation code expired",
+                    field: "code"
+                }]
+            };
+        }
+
+        await usersRepository.confirmEmail(user._id.toString());
+
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
+        };
+    },
+
+    async resendConfirmationEmail(email: string): Promise<Result> {
+        const user: UserDBType | null = await usersRepository.findByLoginOrEmail(email);
+
+        if (!user) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "User not found",
+                    field: "email"
+                }]
+            };
+        }
+
+        if (user.emailConfirmation.isConfirmed) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Email already confirmed",
+                    field: "email"
+                }]
+            };
+        }
+
+        const newConfirmationCode: string = uuidv4();
+        await usersRepository.updateConfirmationCode(user._id.toString(), newConfirmationCode);
+        await this.emailManager.sendConfirmationEmail(email, newConfirmationCode);
+
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
         };
     },
 
@@ -65,6 +179,7 @@ export const authService = {
             extensions: []
         };
     },
+
     async getCurrentUser(userId: string): Promise<Result<UserInfoDto>> {
         const user: UserDBType | null = await usersRepository.findUserById(userId);
 
