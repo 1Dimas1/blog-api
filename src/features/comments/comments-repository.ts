@@ -9,13 +9,13 @@ export const commentsRepository = {
     },
 
     async updateComment(id: string, content: string): Promise<UpdateResult<CommentType>> {
-        return await commentCollection.updateOne(
+        return commentCollection.updateOne(
             { _id: new ObjectId(id) },
             { $set: { content } }
         );
     },
 
     async deleteComment(id: string): Promise<DeleteResult> {
-        return await commentCollection.deleteOne({ _id: new ObjectId(id) });
+        return commentCollection.deleteOne({ _id: new ObjectId(id) });
     }
 }

@@ -5,7 +5,7 @@ import {SETTINGS} from "../../settings";
 
 export const usersRepository = {
     async findByLoginOrEmail(loginOrEmail: string): Promise<UserDBType | null> {
-        return await userCollection.findOne({
+        return userCollection.findOne({
             $or: [
                 { email: loginOrEmail },
                 { login: loginOrEmail }

@@ -4,11 +4,11 @@ import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
 
 export const blogsRepository = {
     async findBlogById(id: string): Promise<BlogDBType | null> {
-        return  await blogCollection.findOne({ _id: new ObjectId(id) });
+        return blogCollection.findOne({ _id: new ObjectId(id) });
     },
 
     async createBlog(blog: BlogType): Promise<InsertOneResult<BlogDBType>> {
-        return await blogCollection.insertOne(blog);
+        return blogCollection.insertOne(blog);
     },
 
     async updateBlog(id: string, blog: BlogInputType): Promise<UpdateResult<BlogDBType>> {
