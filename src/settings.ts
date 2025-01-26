@@ -22,5 +22,6 @@ export const SETTINGS = {
     POST_COLLECTION_NAME: 'posts',
     USER_COLLECTION_NAME: 'users',
     COMMENT_COLLECTION_NAME: 'comments',
+    INVALID_TOKENS_COLLECTION_NAME : 'invalidTokens',
     EMAIL_CONFIRMATION_CODE_EXP_DATE_24_H: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 }

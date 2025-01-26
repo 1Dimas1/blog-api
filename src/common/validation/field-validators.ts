@@ -1,4 +1,4 @@
-import { body } from 'express-validator'
+import {body} from 'express-validator'
 import {blogsRepository} from "../../features/blogs/blogs-repository";
 
 export const loginUserLoginOrEmailValidator = body('loginOrEmail')

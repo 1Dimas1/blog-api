@@ -1,5 +1,6 @@
 export type LoginSuccessDto = {
     accessToken: string;
+    refreshToken: string;
 }
 export type LoginInputDto = {
     loginOrEmail: string,
@@ -24,3 +25,8 @@ export type RegistrationConfirmationDto = {
 export type RegistrationEmailResendingDto = {
     email: string;
 };
+
+export type InvalidRefreshTokenType = {
+    token: string;
+    expiredAt: Date;
+}

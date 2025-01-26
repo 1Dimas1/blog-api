@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import {Result, ResultStatus} from "../../common/types/result.type";
+import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
 
 export type TokenPayload = {
     userId: string;
@@ -9,14 +10,24 @@ export const jwtService = {
     createAccessToken(userId: string): string {
         return jwt.sign(
             { userId },
-            process.env.JWT_SECRET!,
-            { expiresIn: process.env.JWT_TIME }
+            process.env.JWT_ACCESS_SECRET!,
+            { expiresIn: process.env.JWT_ACCESS_TIME }
         );
     },
 
-    verifyToken(token: string): Result<TokenPayload> {
+    createRefreshToken(userId: string): string {
+        return jwt.sign(
+            { userId },
+            process.env.JWT_REFRESH_SECRET!,
+            { expiresIn: process.env.JWT_REFRESH_TIME }
+        );
+    },
+
+    verifyAccessToken(token: string): Result<TokenPayload> {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
+
+            const secret: string = process.env.JWT_ACCESS_SECRET!;
+            const decoded = jwt.verify(token, secret) as TokenPayload;
 
             return {
                 status: ResultStatus.Success,
@@ -36,7 +47,42 @@ export const jwtService = {
         }
     },
 
-    extractTokenFromHeader(authHeader: string | undefined): Result<string> {
+    async verifyRefreshToken(token: string): Promise<Result<TokenPayload>> {
+        try {
+            if (await invalidRefreshTokenService.isTokenInvalid(token)) {
+                return {
+                    status: ResultStatus.Unauthorized,
+                    data: null,
+                    errorMessage: 'Refresh Token is invalid',
+                    extensions: [{
+                        message: "Refresh Token Token is blacklisted",
+                        field: "authorization"
+                    }]
+                };
+            }
+
+            const secret = process.env.JWT_REFRESH_SECRET!;
+            const decoded = jwt.verify(token, secret) as TokenPayload;
+
+            return {
+                status: ResultStatus.Success,
+                data: decoded,
+                extensions: []
+            };
+        } catch (error) {
+            return {
+                status: ResultStatus.Unauthorized,
+                data: null,
+                errorMessage: 'Unauthorized',
+                extensions: [{
+                    message: "Invalid token",
+                    field: "authorization"
+                }]
+            };
+        }
+    },
+
+    extractAccessTokenFromHeader(authHeader: string | undefined): Result<string> {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return {
                 status: ResultStatus.Unauthorized,
@@ -56,5 +102,5 @@ export const jwtService = {
             data: token,
             extensions: []
         };
-    }
+    },
 };

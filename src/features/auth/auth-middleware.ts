@@ -6,18 +6,17 @@ import {usersRepository} from "../users/users-repository";
 
 export const authGuard = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const tokenResult = jwtService.extractTokenFromHeader(req.headers.authorization);
+        const tokenResult = jwtService.extractAccessTokenFromHeader(req.headers.authorization);
 
         if (tokenResult.status !== ResultStatus.Success) {
             res.status(HTTP_CODES.UNAUTHORIZED_401).json();
             return;
         }
 
-        const verifyResult = jwtService.verifyToken(tokenResult.data!);
+        const verifyResult = jwtService.verifyAccessToken(tokenResult.data!);
 
         if (verifyResult.status === ResultStatus.Success) {
             const userId= verifyResult.data!.userId;
-
             const user = await usersRepository.doesExistById(userId)
 
             if(!user) {

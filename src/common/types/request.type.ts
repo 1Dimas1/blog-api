@@ -9,3 +9,9 @@ export type RequestWithParamsAndQuery<T, Q> = Request<T, {}, {}, Q>
 export type RequestWithParams<T> = Request<T>
 
 export type RequestWithParamsAndBody<T, B> = Request<T, {}, B>
+
+export type RequestWithRefreshToken = Request & {
+    cookies: {
+        refreshToken?: string;
+    };
+};

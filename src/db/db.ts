@@ -4,6 +4,7 @@ import {PostType} from "../features/posts/post.type";
 import {SETTINGS} from "../settings";
 import {UserType} from "../features/users/user.type";
 import {CommentType} from "../features/comments/comment.type";
+import {InvalidRefreshTokenType} from "../features/auth/auth.type";
 
 const url = SETTINGS.MONGO_URL
 
@@ -18,6 +19,7 @@ export const blogCollection: Collection<BlogType> = database.collection<BlogType
 export const postCollection: Collection<PostType> = database.collection<PostType>(SETTINGS.POST_COLLECTION_NAME)
 export const userCollection: Collection<UserType> = database.collection<UserType>(SETTINGS.USER_COLLECTION_NAME)
 export const commentCollection: Collection<CommentType> = database.collection<CommentType>(SETTINGS.COMMENT_COLLECTION_NAME)
+export const invalidRefreshTokenCollection: Collection<InvalidRefreshTokenType> = database.collection<InvalidRefreshTokenType>(SETTINGS.INVALID_TOKENS_COLLECTION_NAME)
 
 export const connectToDB = async () => {
     try {

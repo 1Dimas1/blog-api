@@ -1,4 +1,4 @@
-import {RequestWithBody} from "../../common/types/request.type";
+import {RequestWithBody, RequestWithRefreshToken} from "../../common/types/request.type";
 import {Request, Response} from "express";
 import {authService} from "./auth-service";
 import {HTTP_CODES} from "../../common/http.statuses";
@@ -24,9 +24,86 @@ export const authController = {
                 return;
             }
 
+            res.cookie('refreshToken', result.data!.refreshToken, {
+                httpOnly: true,
+                secure: true,
+                maxAge: 20 * 1000
+            });
             res.status(HTTP_CODES.OK_200).json({
                 accessToken: result.data!.accessToken
             });
+        } catch (error) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500).json({
+                errorsMessages: [{
+                    message: "Internal server error",
+                    field: "server"
+                }]
+            });
+        }
+    },
+
+    async refreshToken(req: RequestWithRefreshToken, res: Response) {
+        try {
+            if (!req.cookies.refreshToken) {
+                res.status(HTTP_CODES.UNAUTHORIZED_401).json({
+                    errorsMessages: [{
+                        message: "Unauthorized",
+                        field: "authorization"
+                    }]
+                });
+                return;
+            }
+
+            const refreshToken = req.cookies.refreshToken;
+            const result: Result<LoginSuccessDto> = await authService.refreshTokens(refreshToken);
+
+            if (result.status !== ResultStatus.Success) {
+                res.status(resultCodeToHttpException(result.status))
+                    .json({ errorsMessages: result.extensions });
+                return;
+            }
+
+            res.cookie('refreshToken', result.data!.refreshToken, {
+                httpOnly: true,
+                secure: true,
+                maxAge: 20 * 1000
+            });
+            res.status(HTTP_CODES.OK_200).json({
+                accessToken: result.data!.accessToken
+            });
+        } catch (error) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500).json({
+                errorsMessages: [{
+                    message: "Internal server error",
+                    field: "server"
+                }]
+            });
+        }
+    },
+
+    async logout(req: RequestWithRefreshToken, res: Response) {
+        try {
+            if (!req.cookies.refreshToken) {
+                res.status(HTTP_CODES.UNAUTHORIZED_401).json({
+                    errorsMessages: [{
+                        message: "Unauthorized",
+                        field: "authorization"
+                    }]
+                });
+                return;
+            }
+
+            const refreshToken: string = req.cookies.refreshToken;
+            const result: Result = await authService.logout(refreshToken);
+
+            if (result.status !== ResultStatus.Success) {
+                res.status(resultCodeToHttpException(result.status))
+                    .json({ errorsMessages: result.extensions });
+                return;
+            }
+
+            res.clearCookie('refreshToken');
+            res.sendStatus(HTTP_CODES.NO_CONTENT_204);
         } catch (error) {
             res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500).json({
                 errorsMessages: [{

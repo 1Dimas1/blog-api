@@ -1,6 +1,6 @@
 import {LoginSuccessDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
 import {Result, ResultStatus} from "../../common/types/result.type";
-import {jwtService} from "./jwt-service";
+import {jwtService, TokenPayload} from "./jwt-service";
 import {WithId} from "mongodb";
 import {UserDBType, UserType} from "../users/user.type";
 import {usersRepository} from "../users/users-repository";
@@ -8,12 +8,13 @@ import {bcryptService} from "./bcrypt-service";
 import {emailComposition} from "../../composition-root/email.composition";
 import {usersService} from "../users/users-service";
 import {v4 as uuidv4} from "uuid";
+import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
 
 export const authService = {
 
     emailManager: emailComposition.getEmailManager(),
 
-    async loginUser(loginOrEmail: string,password: string): Promise<Result<LoginSuccessDto | null>> {
+    async loginUser(loginOrEmail: string, password: string): Promise<Result<LoginSuccessDto | null>> {
         const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(loginOrEmail, password);
 
         if (result.status !== ResultStatus.Success) {
@@ -25,14 +26,59 @@ export const authService = {
             };
         }
 
-        const accessToken = jwtService.createAccessToken(
-            result.data!._id.toString()
-        );
+        const accessToken = jwtService.createAccessToken(result.data!._id.toString());
+        const refreshToken = jwtService.createRefreshToken(result.data!._id.toString());
 
         return {
             status: ResultStatus.Success,
-            data: { accessToken },
+            data: { accessToken,  refreshToken },
             extensions: [],
+        };
+    },
+
+    async refreshTokens(refreshToken: string): Promise<Result<LoginSuccessDto>> {
+        const verifyResult: Result<TokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+
+        if (verifyResult.status !== ResultStatus.Success) {
+            return {
+                status: ResultStatus.Unauthorized,
+                data: null,
+                extensions: verifyResult.extensions
+            };
+        }
+
+        await invalidRefreshTokenService.addToBlacklist(refreshToken);
+
+        const userId: string = verifyResult.data!.userId;
+        const newAccessToken: string = jwtService.createAccessToken(userId);
+        const newRefreshToken: string = jwtService.createRefreshToken(userId);
+
+        return {
+            status: ResultStatus.Success,
+            data: {
+                accessToken: newAccessToken,
+                refreshToken: newRefreshToken
+            },
+            extensions: []
+        };
+    },
+
+    async logout(refreshToken: string): Promise<Result> {
+        const verifyResult: Result<TokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+
+        if (verifyResult.status !== ResultStatus.Success) {
+            return {
+                status: ResultStatus.Unauthorized,
+                data: null,
+                extensions: verifyResult.extensions
+            };
+        }
+
+        await invalidRefreshTokenService.addToBlacklist(refreshToken);
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
         };
     },
 

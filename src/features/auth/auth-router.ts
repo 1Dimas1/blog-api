@@ -16,6 +16,12 @@ authRouter.post('/login',
     errorResultMiddleware,
     authController.loginUser)
 
+authRouter.post('/refresh-token',
+    authController.refreshToken);
+
+authRouter.post('/logout',
+    authController.refreshToken);
+
 authRouter.get('/me',
     authGuard,
     authController.getCurrentUser)
