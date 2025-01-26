@@ -16,10 +16,6 @@ export const invalidRefreshTokenService = {
         const invalidToken: WithId<InvalidRefreshTokenType> | null = await invalidRefreshTokensRepository.findInvalidToken(token);
         if (!invalidToken) return false;
 
-        if (invalidToken.expiredAt < new Date()) {
-            await invalidRefreshTokensRepository.deleteInvalidToken(token);
-            return false;
-        }
         return true;
     }
 }
