@@ -20,7 +20,7 @@ authRouter.post('/refresh-token',
     authController.refreshToken);
 
 authRouter.post('/logout',
-    authController.refreshToken);
+    authController.logout);
 
 authRouter.get('/me',
     authGuard,
