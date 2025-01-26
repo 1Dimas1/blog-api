@@ -7,12 +7,14 @@ import usersRouter from "./features/users/users-router";
 import authRouter from "./features/auth/auth-router";
 import {HTTP_CODES} from "./common/http.statuses";
 import commentsRouter from "./features/comments/comments-router";
+import cookieParser from "cookie-parser";
 
 export const app = express()
-app.use(express.json())
+app.use(express.json());
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
-    res.status(HTTP_CODES.OK_200).json({version: '2.0'})
+    res.status(HTTP_CODES.OK_200).json({version: '7.0'})
 })
 
 app.use(SETTINGS.PATH.BLOGS,blogsRouter);
