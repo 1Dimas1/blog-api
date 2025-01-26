@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.get('/', (req, res) => {
-    res.status(HTTP_CODES.OK_200).json({version: '7.0'})
+    res.status(HTTP_CODES.OK_200).json({version: '8.0'})
 })
 
 app.use(SETTINGS.PATH.BLOGS,blogsRouter);
