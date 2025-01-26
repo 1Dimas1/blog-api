@@ -54,7 +54,7 @@ export const authController = {
                 return;
             }
 
-            const refreshToken = req.cookies.refreshToken;
+            const refreshToken: string = req.cookies.refreshToken;
             const result: Result<LoginSuccessDto> = await authService.refreshTokens(refreshToken);
 
             if (result.status !== ResultStatus.Success) {

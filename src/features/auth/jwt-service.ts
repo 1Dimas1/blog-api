@@ -49,7 +49,8 @@ export const jwtService = {
 
     async verifyRefreshToken(token: string): Promise<Result<TokenPayload>> {
         try {
-            if (await invalidRefreshTokenService.isTokenInvalid(token)) {
+            const isTokenInvalid: boolean = await invalidRefreshTokenService.isTokenInvalid(token);
+            if (isTokenInvalid) {
                 return {
                     status: ResultStatus.Unauthorized,
                     data: null,
