@@ -7,10 +7,12 @@ import {
 } from "../../common/validation/field-validators";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {authGuard} from "./auth-middleware";
+import {rateLimitMiddleware} from "../../common/rate-limit/rate-limit-middleware";
 
 const authRouter: Router = Router();
 
 authRouter.post('/login',
+    rateLimitMiddleware,
     loginUserLoginOrEmailValidator,
     loginUserPasswordValidator,
     errorResultMiddleware,
@@ -27,6 +29,7 @@ authRouter.get('/me',
     authController.getCurrentUser)
 
 authRouter.post('/registration',
+    rateLimitMiddleware,
     userLoginValidator,
     userEmailValidator,
     userPasswordValidator,
@@ -34,9 +37,11 @@ authRouter.post('/registration',
     authController.registerUser);
 
 authRouter.post('/registration-confirmation',
+    rateLimitMiddleware,
     authController.confirmRegistration);
 
 authRouter.post('/registration-email-resending',
+    rateLimitMiddleware,
     userEmailValidator,
     errorResultMiddleware,
     authController.resendConfirmationEmail);
