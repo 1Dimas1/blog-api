@@ -5,6 +5,8 @@ import {SETTINGS} from "../settings";
 import {UserType} from "../features/users/user.type";
 import {CommentType} from "../features/comments/comment.type";
 import {InvalidRefreshTokenType} from "../features/auth/auth.type";
+import {SecurityDeviceType} from "../features/security-devices/security-device.type";
+import {RateLimitType} from "../common/rate-limit/rate-limit.type";
 
 const url = SETTINGS.MONGO_URL
 
@@ -20,6 +22,8 @@ export const postCollection: Collection<PostType> = database.collection<PostType
 export const userCollection: Collection<UserType> = database.collection<UserType>(SETTINGS.USER_COLLECTION_NAME)
 export const commentCollection: Collection<CommentType> = database.collection<CommentType>(SETTINGS.COMMENT_COLLECTION_NAME)
 export const invalidRefreshTokenCollection: Collection<InvalidRefreshTokenType> = database.collection<InvalidRefreshTokenType>(SETTINGS.INVALID_TOKENS_COLLECTION_NAME)
+export const securityDevicesCollection: Collection<SecurityDeviceType> = database.collection<SecurityDeviceType>(SETTINGS.SECURITY_DEVICES_COLLECTION);
+export const rateLimitCollection: Collection<RateLimitType> = database.collection<RateLimitType>(SETTINGS.RATE_LIMIT_COLLECTION);
 
 export const connectToDB = async () => {
     try {

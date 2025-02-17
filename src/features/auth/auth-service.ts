@@ -1,6 +1,6 @@
-import {LoginSuccessDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
+import {LoginSuccessDto, LoginUserDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
 import {Result, ResultStatus} from "../../common/types/result.type";
-import {jwtService, TokenPayload} from "./jwt-service";
+import {jwtService, RefreshTokenPayload} from "./jwt-service";
 import {WithId} from "mongodb";
 import {UserDBType, UserType} from "../users/user.type";
 import {usersRepository} from "../users/users-repository";
@@ -9,13 +9,17 @@ import {emailComposition} from "../../composition-root/email.composition";
 import {usersService} from "../users/users-service";
 import {v4 as uuidv4} from "uuid";
 import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
+import {securityDevicesService} from "../security-devices/security-devices.service";
 
 export const authService = {
 
     emailManager: emailComposition.getEmailManager(),
 
-    async loginUser(loginOrEmail: string, password: string): Promise<Result<LoginSuccessDto | null>> {
-        const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(loginOrEmail, password);
+    async loginUser(command: LoginUserDto): Promise<Result<LoginSuccessDto | null>> {
+        const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(
+            command.loginOrEmail,
+            command.password
+        );
 
         if (result.status !== ResultStatus.Success) {
             return {
@@ -26,8 +30,15 @@ export const authService = {
             };
         }
 
-        const accessToken = jwtService.createAccessToken(result.data!._id.toString());
-        const refreshToken = jwtService.createRefreshToken(result.data!._id.toString());
+        const deviceId: string = await securityDevicesService.createUserDevice(
+            result.data!._id.toString(),
+            command.ip || 'unknown',
+            command.userAgent || 'Unknown',
+            new Date(Date.now() + parseInt(process.env.JWT_REFRESH_TIME!)).toISOString()
+        );
+
+        const accessToken: string = jwtService.createAccessToken(result.data!._id.toString());
+        const refreshToken: string = jwtService.createRefreshToken(result.data!._id.toString(), deviceId);
 
         return {
             status: ResultStatus.Success,
@@ -37,7 +48,7 @@ export const authService = {
     },
 
     async refreshTokens(refreshToken: string): Promise<Result<LoginSuccessDto>> {
-        const verifyResult: Result<TokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+        const verifyResult: Result<RefreshTokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
 
         if (verifyResult.status !== ResultStatus.Success) {
             return {
@@ -50,8 +61,12 @@ export const authService = {
         await invalidRefreshTokenService.addToBlacklist(refreshToken);
 
         const userId: string = verifyResult.data!.userId;
+        const deviceId: string = verifyResult.data!.deviceId;
+
+        await securityDevicesService.updateLastActiveDate(deviceId, new Date().toISOString());
+
         const newAccessToken: string = jwtService.createAccessToken(userId);
-        const newRefreshToken: string = jwtService.createRefreshToken(userId);
+        const newRefreshToken: string = jwtService.createRefreshToken(userId, deviceId);
 
         return {
             status: ResultStatus.Success,
@@ -64,7 +79,7 @@ export const authService = {
     },
 
     async logout(refreshToken: string): Promise<Result> {
-        const verifyResult: Result<TokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+        const verifyResult: Result<RefreshTokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
 
         if (verifyResult.status !== ResultStatus.Success) {
             return {
@@ -75,6 +90,7 @@ export const authService = {
         }
 
         await invalidRefreshTokenService.addToBlacklist(refreshToken);
+        await securityDevicesService.terminateSession(verifyResult.data!.deviceId);
         return {
             status: ResultStatus.Success,
             data: null,

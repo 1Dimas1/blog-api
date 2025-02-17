@@ -1,6 +1,6 @@
 import {postCollection} from "../../db/db";
-import {PostDBType, PostDBUpdateType, PostType, PostViewType} from "./post.type";
-import {DeleteResult, InsertOneResult, ObjectId, SortDirection, UpdateResult} from "mongodb";
+import {PostDBType, PostDBUpdateType, PostType} from "./post.type";
+import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
 
 export const postsRepository = {
     async findPostById(id: string): Promise<PostDBType | null> {

@@ -9,6 +9,8 @@ export const SETTINGS = {
         USERS: '/users',
         AUTH: '/auth',
         COMMENTS: '/comments',
+        SECURITY: '/security',
+        DEVICES: '/devices',
         TESTING: '/testing'
     },
     CREDENTIALS: {
@@ -23,5 +25,7 @@ export const SETTINGS = {
     USER_COLLECTION_NAME: 'users',
     COMMENT_COLLECTION_NAME: 'comments',
     INVALID_TOKENS_COLLECTION_NAME : 'invalidTokens',
+    SECURITY_DEVICES_COLLECTION: 'securityDevices',
+    RATE_LIMIT_COLLECTION: 'rateLimit',
     EMAIL_CONFIRMATION_CODE_EXP_DATE_24_H: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 }

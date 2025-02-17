@@ -4,6 +4,8 @@ import {
     commentCollection,
     invalidRefreshTokenCollection,
     postCollection,
+    rateLimitCollection,
+    securityDevicesCollection,
     userCollection
 } from "../../db/db";
 
@@ -16,6 +18,8 @@ export const testingController = {
         await userCollection.drop();
         await commentCollection.drop()
         await invalidRefreshTokenCollection.drop()
+        await securityDevicesCollection.drop()
+        await rateLimitCollection.drop()
         res.sendStatus(HTTP_CODES.NO_CONTENT_204)
     }
 }

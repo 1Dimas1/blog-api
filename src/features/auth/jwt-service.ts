@@ -2,8 +2,13 @@ import jwt from 'jsonwebtoken';
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
 
-export type TokenPayload = {
+export type AccessTokenPayload = {
     userId: string;
+};
+
+export type RefreshTokenPayload = {
+    userId: string;
+    deviceId: string;
 };
 
 export const jwtService = {
@@ -15,19 +20,19 @@ export const jwtService = {
         );
     },
 
-    createRefreshToken(userId: string): string {
+    createRefreshToken(userId: string, deviceId: string): string {
         return jwt.sign(
-            { userId },
+            { userId, deviceId },
             process.env.JWT_REFRESH_SECRET!,
             { expiresIn: process.env.JWT_REFRESH_TIME }
         );
     },
 
-    verifyAccessToken(token: string): Result<TokenPayload> {
+    verifyAccessToken(token: string): Result<AccessTokenPayload> {
         try {
 
             const secret: string = process.env.JWT_ACCESS_SECRET!;
-            const decoded = jwt.verify(token, secret) as TokenPayload;
+            const decoded = jwt.verify(token, secret) as AccessTokenPayload;
 
             return {
                 status: ResultStatus.Success,
@@ -47,7 +52,7 @@ export const jwtService = {
         }
     },
 
-    async verifyRefreshToken(token: string): Promise<Result<TokenPayload>> {
+    async verifyRefreshToken(token: string): Promise<Result<RefreshTokenPayload>> {
         try {
             const isTokenInvalid: boolean = await invalidRefreshTokenService.isTokenInvalid(token);
             if (isTokenInvalid) {
@@ -62,8 +67,8 @@ export const jwtService = {
                 };
             }
 
-            const secret = process.env.JWT_REFRESH_SECRET!;
-            const decoded = jwt.verify(token, secret) as TokenPayload;
+            const secret: string = process.env.JWT_REFRESH_SECRET!;
+            const decoded = jwt.verify(token, secret) as RefreshTokenPayload;
 
             return {
                 status: ResultStatus.Success,
@@ -96,7 +101,7 @@ export const jwtService = {
             };
         }
 
-        const token = authHeader.split(' ')[1];
+        const token: string = authHeader.split(' ')[1];
 
         return {
             status: ResultStatus.Success,

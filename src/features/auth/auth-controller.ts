@@ -6,7 +6,7 @@ import {resultCodeToHttpException} from "../../common/helpers/result-code.mapper
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {
     LoginInputDto,
-    LoginSuccessDto,
+    LoginSuccessDto, LoginUserDto,
     RegistrationConfirmationDto, RegistrationEmailResendingDto,
     RegistrationInputDto,
     UserInfoDto
@@ -15,9 +15,14 @@ import {
 export const authController = {
     async loginUser(req: RequestWithBody<LoginInputDto>, res: Response) {
         try {
-            const { loginOrEmail, password } = req.body;
+            const loginCommand: LoginUserDto = {
+                loginOrEmail: req.body.loginOrEmail,
+                password: req.body.password,
+                ip: req.ip || 'unknown',
+                userAgent: req.headers['user-agent'] || 'Unknown'
+            };
 
-            const result: Result<LoginSuccessDto | null> = await authService.loginUser(loginOrEmail, password);
+            const result: Result<LoginSuccessDto | null> = await authService.loginUser(loginCommand);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).send(result.extensions);

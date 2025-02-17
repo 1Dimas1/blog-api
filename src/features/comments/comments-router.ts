@@ -1,6 +1,5 @@
 import {Router} from "express";
 import {commentsController} from "./сomments-controller";
-import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {authGuard} from "../auth/auth-middleware";
 import {commentContentValidator} from "../../common/validation/field-validators";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";

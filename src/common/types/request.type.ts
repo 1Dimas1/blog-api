@@ -15,3 +15,9 @@ export type RequestWithRefreshToken = Request & {
         refreshToken?: string;
     };
 };
+
+export type RequestWithAccessToken = Request & {
+    headers: {
+        authorization?: string;
+    };
+};

@@ -8,10 +8,12 @@ import authRouter from "./features/auth/auth-router";
 import {HTTP_CODES} from "./common/http.statuses";
 import commentsRouter from "./features/comments/comments-router";
 import cookieParser from "cookie-parser";
+import securityDevicesRouter from "./features/security-devices/security-devices.router";
 
 export const app = express()
 app.use(express.json());
 app.use(cookieParser());
+app.set('trust proxy', true);
 
 app.get('/', (req, res) => {
     res.status(HTTP_CODES.OK_200).json({version: '8.0'})
@@ -22,4 +24,5 @@ app.use(SETTINGS.PATH.POSTS,postsRouter);
 app.use(SETTINGS.PATH.USERS,usersRouter);
 app.use(SETTINGS.PATH.AUTH, authRouter);
 app.use(SETTINGS.PATH.COMMENTS, commentsRouter);
+app.use(SETTINGS.PATH.SECURITY.concat(SETTINGS.PATH.DEVICES), securityDevicesRouter)
 app.use(SETTINGS.PATH.TESTING, testingRouter);
