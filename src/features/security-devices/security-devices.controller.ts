@@ -69,7 +69,11 @@ export const securityDevicesController = {
                 req.params.deviceId
             );
 
-            res.sendStatus(resultCodeToHttpException(result.status))
+            if (result.status !== ResultStatus.Success) {
+                res.sendStatus(resultCodeToHttpException(result.status))
+            }
+
+            res.sendStatus(HTTP_CODES.NO_CONTENT_204)
         } catch (error) {
             res.sendStatus(HTTP_CODES.UNAUTHORIZED_401);
         }
