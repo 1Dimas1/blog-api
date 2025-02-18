@@ -8,14 +8,14 @@ export const rateLimitService = {
 
         await rateLimitRepository.cleanup();
 
-        const attemptsCount: number = await rateLimitRepository.countAttempts(ip, url, windowStart);
-
         const attempt: RateLimitType = {
             ip,
             url,
             date: now
         };
         await rateLimitRepository.createAttempt(attempt);
+
+        const attemptsCount: number = await rateLimitRepository.countAttempts(ip, url, windowStart);
 
         if (attemptsCount > RATE_LIMIT.MAX_ATTEMPTS) {
             return {
