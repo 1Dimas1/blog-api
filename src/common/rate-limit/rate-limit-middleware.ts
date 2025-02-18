@@ -10,7 +10,7 @@ export const rateLimitMiddleware = async (
 ) => {
     try {
         const ip: string = req.ip || req.socket.remoteAddress || 'unknown';
-        const url: string = req.baseUrl || req.originalUrl;
+        const url: string = req.originalUrl;
 
         const result: RateLimitResult = await rateLimitService.checkRateLimit(ip, url);
 
