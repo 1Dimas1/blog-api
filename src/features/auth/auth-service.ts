@@ -10,6 +10,7 @@ import {usersService} from "../users/users-service";
 import {v4 as uuidv4} from "uuid";
 import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
 import {securityDevicesService} from "../security-devices/security-devices.service";
+import {SecurityDeviceType} from "../security-devices/security-device.type";
 
 export const authService = {
 
@@ -63,6 +64,16 @@ export const authService = {
         const userId: string = verifyResult.data!.userId;
         const deviceId: string = verifyResult.data!.deviceId;
 
+        const deviceExistResult: Result<SecurityDeviceType> = await securityDevicesService.findDevice(userId, deviceId)
+
+        if (deviceExistResult.status !== ResultStatus.Success) {
+            return {
+                status: deviceExistResult.status,
+                data: null,
+                extensions: deviceExistResult.extensions
+            };
+        }
+
         await securityDevicesService.updateLastActiveDate(deviceId, new Date().toISOString());
 
         const newAccessToken: string = jwtService.createAccessToken(userId);
@@ -90,6 +101,20 @@ export const authService = {
         }
 
         await invalidRefreshTokenService.addToBlacklist(refreshToken);
+
+        const userId: string = verifyResult.data!.userId;
+        const deviceId: string = verifyResult.data!.deviceId;
+
+        const deviceExistResult: Result<SecurityDeviceType> = await securityDevicesService.findDevice(userId, deviceId)
+
+        if (deviceExistResult.status !== ResultStatus.Success) {
+            return {
+                status: deviceExistResult.status,
+                data: null,
+                extensions: deviceExistResult.extensions
+            };
+        }
+
         await securityDevicesService.terminateSession(verifyResult.data!.deviceId);
         return {
             status: ResultStatus.Success,

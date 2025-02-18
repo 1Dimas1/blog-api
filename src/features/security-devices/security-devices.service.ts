@@ -23,6 +23,32 @@ export const securityDevicesService = {
         return securityDevicesRepository.getAllUserDevices(userId);
     },
 
+    async findDevice(userId: string, deviceId: string): Promise<Result<SecurityDeviceType>> {
+        const device: SecurityDeviceType | null = await securityDevicesRepository.findDeviceById(deviceId);
+
+        if (!device) {
+            return {
+                status: ResultStatus.NotFound,
+                data: null,
+                extensions: []
+            };
+        }
+
+        if (device.userId !== userId) {
+            return {
+                status: ResultStatus.Forbidden,
+                data: null,
+                extensions: []
+            };
+        }
+
+        return {
+            status: ResultStatus.Success,
+            data: device,
+            extensions: []
+        };
+    },
+
     async updateLastActiveDate(deviceId: string, lastActiveDate: string): Promise<void> {
         await securityDevicesRepository.updateLastActiveDate(deviceId, lastActiveDate);
     },
