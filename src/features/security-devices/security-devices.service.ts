@@ -28,7 +28,7 @@ export const securityDevicesService = {
 
         if (!device) {
             return {
-                status: ResultStatus.NotFound,
+                status: ResultStatus.Unauthorized,
                 data: null,
                 extensions: []
             };
