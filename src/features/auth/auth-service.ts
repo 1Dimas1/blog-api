@@ -253,7 +253,7 @@ export const authService = {
             );
 
             const { subject, html } = this.emailTemplateManager.getPasswordRecoveryEmailTemplate(recoveryCode);
-            this.emailManager.sendEmail(email, subject, html).catch();
+            await this.emailManager.sendEmail(email, subject, html);
         }
 
         return {
