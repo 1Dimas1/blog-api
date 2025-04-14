@@ -244,7 +244,7 @@ export const authService = {
             const recoveryCode: string = uuidv4();
 
             const expirationDate = new Date();
-            expirationDate.setHours(expirationDate.getHours() + 1);
+            expirationDate.setMinutes(expirationDate.getMinutes() + 5);
 
             await usersRepository.setPasswordRecoveryCode(
                 user._id.toString(),
