@@ -20,14 +20,13 @@ export class EmailTemplateManager implements IEmailTemplateManager {
 
     getPasswordRecoveryEmailTemplate(recoveryCode: string): { subject: string; html: string } {
         const subject = 'Password Recovery';
-        const recoveryLink = `https://somesite.com/password-recovery?code=${recoveryCode}`;
+        const recoveryLink = `https://somesite.com/password-recovery?recoveryCode=${recoveryCode}`;
 
         const html = `
             <h1>Password Recovery</h1>
             <p>To set a new password please follow the link below:
             <a href="${recoveryLink}">recovery password</a>
             </p>
-            <p>Your recovery code: ${recoveryCode}</p>
         `;
 
         return { subject, html };
