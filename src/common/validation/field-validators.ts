@@ -1,6 +1,17 @@
 import {body} from 'express-validator'
 import {blogsRepository} from "../../features/blogs/blogs-repository";
 
+
+export const newPasswordValidator = body('newPassword')
+    .isString().withMessage('New password should be a string')
+    .trim()
+    .isLength({ min: 6, max: 20 }).withMessage('Password should be between 6 and 20 characters');
+
+export const recoveryCodeValidator = body('recoveryCode')
+    .isString().withMessage('Recovery code should be a string')
+    .trim()
+    .notEmpty().withMessage('Recovery code is required');
+
 export const loginUserLoginOrEmailValidator = body('loginOrEmail')
     .isString().notEmpty().trim().withMessage('loginOrEmail is required')
 

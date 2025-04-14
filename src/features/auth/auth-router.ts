@@ -2,7 +2,7 @@ import {Router} from "express";
 import {authController} from "./auth-controller";
 import {
     loginUserLoginOrEmailValidator,
-    loginUserPasswordValidator, userEmailValidator,
+    loginUserPasswordValidator, newPasswordValidator, recoveryCodeValidator, userEmailValidator,
     userLoginValidator, userPasswordValidator
 } from "../../common/validation/field-validators";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
@@ -45,5 +45,18 @@ authRouter.post('/registration-email-resending',
     userEmailValidator,
     errorResultMiddleware,
     authController.resendConfirmationEmail);
+
+authRouter.post('/password-recovery',
+    rateLimitMiddleware,
+    userEmailValidator,
+    errorResultMiddleware,
+    authController.passwordRecovery);
+
+authRouter.post('/new-password',
+    rateLimitMiddleware,
+    newPasswordValidator,
+    recoveryCodeValidator,
+    errorResultMiddleware,
+    authController.setNewPassword);
 
 export default  authRouter;

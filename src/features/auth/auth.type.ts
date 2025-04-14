@@ -38,3 +38,12 @@ export type InvalidRefreshTokenType = {
     token: string;
     expiredAt: Date;
 }
+
+export type PasswordRecoveryInputDto = {
+    email: string;
+};
+
+export type NewPasswordInputDto = {
+    newPassword: string;
+    recoveryCode: string;
+};

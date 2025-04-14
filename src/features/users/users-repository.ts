@@ -63,5 +63,41 @@ export const usersRepository = {
 
     async deleteUser(id: string): Promise<DeleteResult> {
         return userCollection.deleteOne({_id: new ObjectId(id)})
+    },
+
+    async setPasswordRecoveryCode(
+        userId: string,
+        recoveryCode: string,
+        expirationDate: string
+    ): Promise<UpdateResult> {
+        return userCollection.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    'passwordRecovery.recoveryCode': recoveryCode,
+                    'passwordRecovery.expirationDate': expirationDate
+                }
+            }
+        );
+    },
+
+    async findByPasswordRecoveryCode(recoveryCode: string): Promise<UserDBType | null> {
+        return userCollection.findOne({
+            'passwordRecovery.recoveryCode': recoveryCode
+        });
+    },
+
+    async updatePassword(userId: string, passwordHash: string): Promise<UpdateResult> {
+        return userCollection.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    password: passwordHash
+                },
+                $unset: {
+                    'passwordRecovery': 1
+                }
+            }
+        );
     }
 }

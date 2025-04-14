@@ -15,6 +15,7 @@ import {SecurityDeviceType} from "../security-devices/security-device.type";
 export const authService = {
 
     emailManager: emailComposition.getEmailManager(),
+    emailTemplateManager: emailComposition.getEmailTemplateManager(),
 
     async loginUser(command: LoginUserDto): Promise<Result<LoginSuccessDto | null>> {
         const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(
@@ -141,7 +142,10 @@ export const authService = {
         const newUser: UserType = await usersService.createUserEntity(input, false);
         await usersRepository.createUser(newUser)
 
-        await this.emailManager.sendConfirmationEmail(newUser.email, newUser.emailConfirmation.confirmationCode!);
+        const { subject, html } = this.emailTemplateManager.getConfirmationEmailTemplate(
+            newUser.emailConfirmation.confirmationCode!
+        );
+        this.emailManager.sendEmail(newUser.email, subject, html).catch();
 
         return {
             status: ResultStatus.Success,
@@ -222,7 +226,73 @@ export const authService = {
 
         const newConfirmationCode: string = uuidv4();
         await usersRepository.updateConfirmationCode(user._id.toString(), newConfirmationCode);
-        await this.emailManager.sendConfirmationEmail(email, newConfirmationCode);
+
+        const { subject, html } = this.emailTemplateManager.getConfirmationEmailTemplate(newConfirmationCode);
+        this.emailManager.sendEmail(email, subject, html).catch();
+
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
+        };
+    },
+
+    async initiatePasswordRecovery(email: string): Promise<Result> {
+        const user: UserDBType | null = await usersRepository.findByLoginOrEmail(email);
+
+        if (user) {
+            const recoveryCode: string = uuidv4();
+
+            const expirationDate = new Date();
+            expirationDate.setHours(expirationDate.getHours() + 1);
+
+            await usersRepository.setPasswordRecoveryCode(
+                user._id.toString(),
+                recoveryCode,
+                expirationDate.toISOString()
+            );
+
+            const { subject, html } = this.emailTemplateManager.getPasswordRecoveryEmailTemplate(recoveryCode);
+            this.emailManager.sendEmail(email, subject, html).catch();
+        }
+
+        return {
+            status: ResultStatus.Success,
+            data: null,
+            extensions: []
+        };
+    },
+
+    async setNewPassword(recoveryCode: string, newPassword: string): Promise<Result> {
+        const user: UserDBType | null = await usersRepository.findByPasswordRecoveryCode(recoveryCode);
+
+        if (!user) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Recovery code is incorrect or expired",
+                    field: "recoveryCode"
+                }]
+            };
+        }
+
+        if (user.passwordRecovery &&
+            user.passwordRecovery.expirationDate &&
+            new Date(user.passwordRecovery.expirationDate) < new Date()) {
+            return {
+                status: ResultStatus.BadRequest,
+                data: null,
+                extensions: [{
+                    message: "Recovery code is expired",
+                    field: "recoveryCode"
+                }]
+            };
+        }
+
+        const passwordHash: string = await bcryptService.hashPassword(newPassword);
+
+        await usersRepository.updatePassword(user._id.toString(), passwordHash);
 
         return {
             status: ResultStatus.Success,

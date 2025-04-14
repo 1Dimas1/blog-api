@@ -10,6 +10,7 @@ export type UserType = {
         expirationDate: string | null;
         isConfirmed: boolean;
     };
+    passwordRecovery?: PasswordRecoveryType;
 }
 
 export type UserDBType = WithId<UserType>
@@ -43,4 +44,9 @@ export type QueryUserType = {
 
 export type URIParamsUserIdType = {
     id: string
+}
+
+export type PasswordRecoveryType = {
+    recoveryCode: string;
+    expirationDate: string;
 }

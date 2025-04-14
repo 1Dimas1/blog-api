@@ -6,7 +6,7 @@ import {resultCodeToHttpException} from "../../common/helpers/result-code.mapper
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {
     LoginInputDto,
-    LoginSuccessDto, LoginUserDto,
+    LoginSuccessDto, LoginUserDto, NewPasswordInputDto, PasswordRecoveryInputDto,
     RegistrationConfirmationDto, RegistrationEmailResendingDto,
     RegistrationInputDto,
     UserInfoDto
@@ -214,4 +214,49 @@ export const authController = {
             });
         }
     },
+    async passwordRecovery(req: RequestWithBody<PasswordRecoveryInputDto>, res: Response) {
+        try {
+            const result: Result = await authService.initiatePasswordRecovery(req.body.email);
+
+            if (result.status !== ResultStatus.Success) {
+                res.status(resultCodeToHttpException(result.status)).json({
+                    errorsMessages: result.extensions
+                });
+                return;
+            }
+
+            res.sendStatus(HTTP_CODES.NO_CONTENT_204);
+        } catch (error) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500).json({
+                errorsMessages: [{
+                    message: "Internal server error",
+                    field: "server"
+                }]
+            });
+        }
+    },
+    async setNewPassword(req: RequestWithBody<NewPasswordInputDto>, res: Response) {
+        try {
+            const result: Result = await authService.setNewPassword(
+                req.body.recoveryCode,
+                req.body.newPassword
+            );
+
+            if (result.status !== ResultStatus.Success) {
+                res.status(resultCodeToHttpException(result.status)).json({
+                    errorsMessages: result.extensions
+                });
+                return;
+            }
+
+            res.sendStatus(HTTP_CODES.NO_CONTENT_204);
+        } catch (error) {
+            res.status(HTTP_CODES.INTERNAL_SERVER_ERROR_500).json({
+                errorsMessages: [{
+                    message: "Internal server error",
+                    field: "server"
+                }]
+            });
+        }
+    }
 }
