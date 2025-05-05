@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {postsController} from "./posts-controller";
+import {PostsController} from "./posts-controller";
 import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {
     blogIdValidator, commentContentValidator,
@@ -9,26 +9,29 @@ import {
 } from "../../common/validation/field-validators";
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {validatePostExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
-import {commentsController} from "../comments/сomments-controller";
+import CommentsController from "../comments/сomments-controller";
 import {authGuard} from "../auth/auth-middleware";
+import container from "../../container/inversify.config";
 
 const postsRouter: Router = Router();
+const postsController: PostsController = container.get<PostsController>(PostsController);
+const commentsController: CommentsController = container.get<CommentsController>(CommentsController);
 
 postsRouter.get('/:id/comments',
-    commentsController.getCommentsByPost);
+    commentsController.getCommentsByPost.bind(commentsController));
 
 postsRouter.post('/:id/comments',
     authGuard,
     validatePostExistsMiddleware,
     commentContentValidator,
     errorResultMiddleware,
-    commentsController.createComment);
+    commentsController.createComment.bind(commentsController));
 
-postsRouter.get('/', postsController.getPosts);
+postsRouter.get('/', postsController.getPosts.bind(postsController));
 
 postsRouter.get('/:id',
     validatePostExistsMiddleware,
-    postsController.getPostById);
+    postsController.getPostById.bind(postsController));
 
 postsRouter.post('/',
     authAdminMiddleware,
@@ -37,7 +40,7 @@ postsRouter.post('/',
     postShortDescriptionValidator,
     postContentValidator,
     errorResultMiddleware,
-    postsController.createPost);
+    postsController.createPost.bind(postsController));
 
 postsRouter.put('/:id',
     authAdminMiddleware,
@@ -47,11 +50,11 @@ postsRouter.put('/:id',
     postShortDescriptionValidator,
     postContentValidator,
     errorResultMiddleware,
-    postsController.updatePost);
+    postsController.updatePost.bind(postsController));
 
 postsRouter.delete('/:id',
     authAdminMiddleware,
     validatePostExistsMiddleware,
-    postsController.deletePost);
+    postsController.deletePost.bind(postsController));
 
 export default postsRouter;

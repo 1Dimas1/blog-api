@@ -1,5 +1,5 @@
 import {body} from 'express-validator'
-import {blogsRepository} from "../../features/blogs/blogs-repository";
+import BlogsRepository from "../../features/blogs/blogs-repository";
 
 
 export const newPasswordValidator = body('newPassword')
@@ -70,6 +70,7 @@ export const postContentValidator = body('content')
 export const blogIdValidator = body('blogId')
     .isString().notEmpty().trim().withMessage('blogId is required')
     .custom( async (blogId) =>{
+        const blogsRepository: BlogsRepository = new BlogsRepository()
         const blog = await blogsRepository.findBlogById(blogId)
         if (!blog) {
             throw new Error("Blog does not exist")

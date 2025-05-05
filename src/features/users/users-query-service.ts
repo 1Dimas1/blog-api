@@ -1,9 +1,13 @@
 import {SortDirection} from "mongodb";
 import {UserViewModel, UsersPaginationViewModel} from "./user.type";
 import {buildFindUsersQuery} from "../../common/helpers/find-query-builders";
-import {usersQueryRepository} from "./users-queryRepository";
+import UsersQueryRepository from "./users-query-repository";
+import {inject, injectable} from "inversify";
 
-export const usersQueryService = {
+@injectable()
+export default class UsersQueryService {
+    constructor(@inject(UsersQueryRepository) private usersQueryRepository: UsersQueryRepository) {}
+
     async getUsers(
         sortBy: string,
         sortDirection: SortDirection,
@@ -14,14 +18,14 @@ export const usersQueryService = {
     ): Promise<UsersPaginationViewModel> {
         const findUsersQuery = buildFindUsersQuery(searchLoginTerm, searchEmailTerm);
 
-        const users: UserViewModel[] = await usersQueryRepository.getUsers(
+        const users: UserViewModel[] = await this.usersQueryRepository.getUsers(
             sortBy,
             sortDirection,
             pageNumber,
             pageSize,
             findUsersQuery)
 
-        const usersCount: number = await usersQueryRepository.getUsersCount(findUsersQuery)
+        const usersCount: number = await this.usersQueryRepository.getUsersCount(findUsersQuery)
 
         return {
             pagesCount: Math.ceil(usersCount / pageSize),

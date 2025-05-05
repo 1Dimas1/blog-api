@@ -1,8 +1,12 @@
 import {ObjectId, SortDirection} from "mongodb";
 import {PostViewType, PostsPaginatedViewModel} from "./post.type";
-import {postsQueryRepository} from "./posts-queryRepository";
+import PostsQueryRepository from "./posts-query-repository";
+import {inject, injectable} from "inversify";
 
-export const postsQueryService = {
+@injectable()
+export default class PostsQueryService {
+    constructor(@inject(PostsQueryRepository) private postsQueryRepository: PostsQueryRepository) {}
+
     async getPosts(
         sortBy: string,
         sortDirection: SortDirection,
@@ -16,8 +20,8 @@ export const postsQueryService = {
         const filter = {
             ...search
         }
-        const posts: PostViewType[] = await postsQueryRepository.getPosts(sortBy, sortDirection, pageNumber, pageSize, filter)
-        const postsCount: number = await postsQueryRepository.getPostsCount(filter)
+        const posts: PostViewType[] = await this.postsQueryRepository.getPosts(sortBy, sortDirection, pageNumber, pageSize, filter)
+        const postsCount: number = await this.postsQueryRepository.getPostsCount(filter)
         return {
             pagesCount: Math.ceil(postsCount / pageSize),
             page: pageNumber,
@@ -25,5 +29,5 @@ export const postsQueryService = {
             totalCount: postsCount,
             items: posts
         }
-    },
+    }
 }

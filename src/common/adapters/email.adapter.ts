@@ -1,16 +1,19 @@
 import nodemailer from 'nodemailer';
 import {IOAuthManager} from "../managers/gmail.oauth.manager";
+import {injectable, inject} from "inversify";
+import {TYPES} from "../types/identifiers";
 
 export interface IEmailAdapter {
     sendEmail(to: string, subject: string, html: string): Promise<boolean>;
 }
 
+@injectable()
 export class EmailAdapter implements IEmailAdapter {
     private transporter: nodemailer.Transporter | null = null;
 
     constructor(
-        private readonly gmailUser: string,
-        private readonly oAuthManager: IOAuthManager
+        @inject(TYPES.GmailUser) private gmailUser: string,
+        @inject(TYPES.IOAuthManager) private oAuthManager: IOAuthManager
     ) {}
 
     private async createTransporter(): Promise<nodemailer.Transporter> {

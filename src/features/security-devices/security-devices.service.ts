@@ -1,9 +1,13 @@
 import {v4 as uuidv4} from "uuid";
 import {SecurityDeviceType, SecurityDeviceViewModel} from "./security-device.type";
-import {securityDevicesRepository} from "./security-devices.repository";
+import SecurityDevicesRepository from "./security-devices.repository";
 import {Result, ResultStatus} from "../../common/types/result.type";
+import {inject, injectable} from "inversify";
 
-export const securityDevicesService = {
+@injectable()
+export default class SecurityDevicesService {
+    constructor(@inject(SecurityDevicesRepository) private securityDevicesRepository: SecurityDevicesRepository) {}
+
     async createUserDevice(userId: string, ip: string, userAgent: string, expirationDate: string): Promise<string> {
         const deviceId: string = uuidv4();
         const device: SecurityDeviceType = {
@@ -15,16 +19,16 @@ export const securityDevicesService = {
             expirationDate
         };
 
-        await securityDevicesRepository.createDevice(device);
+        await this.securityDevicesRepository.createDevice(device);
         return deviceId;
-    },
+    }
 
     async getAllUserDevices(userId: string): Promise<SecurityDeviceViewModel[]> {
-        return securityDevicesRepository.getAllUserDevices(userId);
-    },
+        return this.securityDevicesRepository.getAllUserDevices(userId);
+    }
 
     async findDevice(userId: string, deviceId: string): Promise<Result<SecurityDeviceType>> {
-        const device: SecurityDeviceType | null = await securityDevicesRepository.findDeviceById(deviceId);
+        const device: SecurityDeviceType | null = await this.securityDevicesRepository.findDeviceById(deviceId);
 
         if (!device) {
             return {
@@ -47,14 +51,14 @@ export const securityDevicesService = {
             data: device,
             extensions: []
         };
-    },
+    }
 
     async updateLastActiveDate(deviceId: string, lastActiveDate: string): Promise<void> {
-        await securityDevicesRepository.updateLastActiveDate(deviceId, lastActiveDate);
-    },
+        await this.securityDevicesRepository.updateLastActiveDate(deviceId, lastActiveDate);
+    }
 
     async deleteDevice(userId: string, deviceId: string): Promise<Result> {
-        const device: SecurityDeviceType | null = await securityDevicesRepository.findDeviceById(deviceId);
+        const device: SecurityDeviceType | null = await this.securityDevicesRepository.findDeviceById(deviceId);
 
         if (!device) {
             return {
@@ -72,19 +76,19 @@ export const securityDevicesService = {
             };
         }
 
-        await securityDevicesRepository.deleteDevice(deviceId);
+        await this.securityDevicesRepository.deleteDevice(deviceId);
         return {
             status: ResultStatus.Success,
             data: null,
             extensions: []
         };
-    },
+    }
 
     async deleteAllOtherUserDevices(userId: string, currentDeviceId: string): Promise<void> {
-        await securityDevicesRepository.deleteAllUserDevicesExceptCurrent(userId, currentDeviceId);
-    },
+        await this.securityDevicesRepository.deleteAllUserDevicesExceptCurrent(userId, currentDeviceId);
+    }
 
     async terminateSession(deviceId: string): Promise<void> {
-        await securityDevicesRepository.deleteDevice(deviceId);
+        await this.securityDevicesRepository.deleteDevice(deviceId);
     }
 }

@@ -1,10 +1,13 @@
 import {Router} from "express";
-import {securityDevicesController} from "./security-devices.controller";
+import SecurityDevicesController from "./security-devices.controller";
+import container from "../../container/inversify.config";
 
 const securityDevicesRouter: Router = Router();
 
-securityDevicesRouter.get('/', securityDevicesController.getAllDevices);
-securityDevicesRouter.delete('/', securityDevicesController.deleteAllOtherSessions);
-securityDevicesRouter.delete('/:deviceId', securityDevicesController.deleteDeviceSession);
+const securityDevicesController: SecurityDevicesController = container.get(SecurityDevicesController);
+
+securityDevicesRouter.get('/', securityDevicesController.getAllDevices.bind(securityDevicesController));
+securityDevicesRouter.delete('/', securityDevicesController.deleteAllOtherSessions.bind(securityDevicesController));
+securityDevicesRouter.delete('/:deviceId', securityDevicesController.deleteDeviceSession.bind(securityDevicesController));
 
 export default securityDevicesRouter;

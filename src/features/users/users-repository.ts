@@ -2,8 +2,10 @@ import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
 import {UserDBType, UserType} from "./user.type";
 import {userCollection} from "../../db/db";
 import {SETTINGS} from "../../settings";
+import {injectable} from "inversify";
 
-export const usersRepository = {
+@injectable()
+export default class UsersRepository {
     async findByLoginOrEmail(loginOrEmail: string): Promise<UserDBType | null> {
         return userCollection.findOne({
             $or: [
@@ -11,7 +13,7 @@ export const usersRepository = {
                 { login: loginOrEmail }
             ]
         });
-    },
+    }
 
     async doesExistById(id: string): Promise<boolean> {
         const user: Promise<UserDBType | null> = this.findUserById(id)
@@ -20,17 +22,17 @@ export const usersRepository = {
         }
 
         return true;
-    },
+    }
 
     async findUserById(id: string): Promise<UserDBType | null> {
         return userCollection.findOne({_id: new ObjectId(id)});
-    },
+    }
 
     async findByConfirmationCode(code: string): Promise<UserDBType | null> {
         return userCollection.findOne({
             'emailConfirmation.confirmationCode': code
         });
-    },
+    }
 
     async confirmEmail(id: string): Promise<UpdateResult<UserDBType>> {
         return userCollection.updateOne(
@@ -43,7 +45,7 @@ export const usersRepository = {
                 }
             }
         )
-    },
+    }
 
     async updateConfirmationCode(id: string, newConfirmationCode: string): Promise<UpdateResult<UserDBType>> {
         return userCollection.updateOne(
@@ -55,15 +57,15 @@ export const usersRepository = {
                 }
             }
         );
-    },
+    }
 
     async createUser(user: UserType): Promise<InsertOneResult<UserDBType>> {
         return userCollection.insertOne(user)
-    },
+    }
 
     async deleteUser(id: string): Promise<DeleteResult> {
         return userCollection.deleteOne({_id: new ObjectId(id)})
-    },
+    }
 
     async setPasswordRecoveryCode(
         userId: string,
@@ -79,13 +81,13 @@ export const usersRepository = {
                 }
             }
         );
-    },
+    }
 
     async findByPasswordRecoveryCode(recoveryCode: string): Promise<UserDBType | null> {
         return userCollection.findOne({
             'passwordRecovery.recoveryCode': recoveryCode
         });
-    },
+    }
 
     async updatePassword(userId: string, passwordHash: string): Promise<UpdateResult> {
         return userCollection.updateOne(

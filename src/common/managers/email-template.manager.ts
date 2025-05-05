@@ -1,8 +1,11 @@
+import {injectable} from "inversify";
+
 export interface IEmailTemplateManager {
     getConfirmationEmailTemplate(confirmationCode: string): { subject: string; html: string };
     getPasswordRecoveryEmailTemplate(recoveryCode: string): { subject: string; html: string };
 }
 
+@injectable()
 export class EmailTemplateManager implements IEmailTemplateManager {
     getConfirmationEmailTemplate(confirmationCode: string): { subject: string; html: string } {
         const subject = 'Please confirm your email';

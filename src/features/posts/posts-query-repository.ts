@@ -1,8 +1,11 @@
 import {PostDBType, PostViewType} from "./post.type";
 import {postCollection} from "../../db/db";
 import {ObjectId, SortDirection} from "mongodb";
+import {injectable} from "inversify";
 
-export const postsQueryRepository = {
+
+@injectable()
+export default class PostsQueryRepository {
     async getPosts(
         sortBy: string,
         sortDirection: SortDirection,
@@ -18,16 +21,16 @@ export const postsQueryRepository = {
             .toArray();
 
         return posts.map(this._mapPostToOutput)
-    },
+    }
 
     async findPostById(id: string): Promise<PostViewType | null> {
         const post: PostDBType | null = await postCollection.findOne({ _id: new ObjectId(id) });
         return post ? this._mapPostToOutput(post) : null;
-    },
+    }
 
     async getPostsCount(filter: any): Promise<number> {
         return postCollection.countDocuments(filter);
-    },
+    }
 
     _mapPostToOutput(post: PostDBType): PostViewType {
         return {
@@ -40,4 +43,4 @@ export const postsQueryRepository = {
             createdAt: post.createdAt
         };
     }
-};
+}

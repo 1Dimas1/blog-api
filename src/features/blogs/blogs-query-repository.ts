@@ -1,8 +1,10 @@
 import {BlogDBType, BlogViewModel} from "./blog.type";
 import {blogCollection} from "../../db/db";
 import {ObjectId, SortDirection} from "mongodb";
+import {injectable} from "inversify";
 
-export const blogsQueryRepository = {
+@injectable()
+export default class BlogsQueryRepository {
     async getBlogs(
         sortBy: string,
         sortDirection: SortDirection,
@@ -18,16 +20,16 @@ export const blogsQueryRepository = {
             .toArray();
 
         return blogs.map(this._mapToOutput);
-    },
+    }
 
     async findBlogById(id: string): Promise<BlogViewModel | null> {
         const blog: BlogDBType | null = await blogCollection.findOne({ _id: new ObjectId(id) });
         return blog ? this._mapToOutput(blog) : null;
-    },
+    }
 
     async getBlogsCount(filter: any): Promise<number> {
         return blogCollection.countDocuments(filter);
-    },
+    }
 
     _mapToOutput(blog: BlogDBType): BlogViewModel {
         return {

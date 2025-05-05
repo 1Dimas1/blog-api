@@ -1,14 +1,17 @@
 import {OAuthTokensSession} from "../types/oauth.type";
 import {IOAuthAdapter} from "../adapters/gmail.oauth.adapter";
+import {inject, injectable} from "inversify";
+import {TYPES} from "../types/identifiers";
 
 export interface IOAuthManager {
     getValidAccessToken(): Promise<string>;
 }
 
+@injectable()
 export class GmailOAuthManager implements IOAuthManager {
     private tokenSession: OAuthTokensSession | null = null;
 
-    constructor(private readonly oAuthAdapter: IOAuthAdapter) {}
+    constructor(@inject(TYPES.IOAuthAdapter)private oAuthAdapter: IOAuthAdapter) {}
 
     async getValidAccessToken(): Promise<string> {
         try {

@@ -1,8 +1,12 @@
 import {SortDirection} from "mongodb";
 import {BlogViewModel, BlogsPaginatedViewModel} from "./blog.type";
-import {blogsQueryRepository} from "./blogs-queryRepository";
+import BlogsQueryRepository from "./blogs-query-repository";
+import {inject, injectable} from "inversify";
 
-export const blogsQueryService = {
+@injectable()
+export default class BlogsQueryService {
+    constructor(@inject(BlogsQueryRepository) private blogsQueryRepository: BlogsQueryRepository) {}
+
     async getBlogs(
         sortBy: string,
         sortDirection: SortDirection ,
@@ -18,14 +22,14 @@ export const blogsQueryService = {
             ...search
         }
 
-        const blogs: BlogViewModel[] = await blogsQueryRepository.getBlogs(
+        const blogs: BlogViewModel[] = await this.blogsQueryRepository.getBlogs(
             sortBy,
             sortDirection,
             pageNumber,
             pageSize,
             filter)
 
-        const blogsCount: number = await blogsQueryRepository.getBlogsCount(filter)
+        const blogsCount: number = await this.blogsQueryRepository.getBlogsCount(filter)
 
         return {
             pagesCount: Math.ceil(blogsCount / pageSize),
@@ -34,5 +38,5 @@ export const blogsQueryService = {
             totalCount: blogsCount,
             items: blogs
         }
-    },
+    }
 }

@@ -1,6 +1,6 @@
 import {RequestWithBody, RequestWithRefreshToken} from "../../common/types/request.type";
 import {Request, Response} from "express";
-import {authService} from "./auth-service";
+import AuthService from "./auth-service";
 import {HTTP_CODES} from "../../common/http.statuses";
 import {resultCodeToHttpException} from "../../common/helpers/result-code.mapper";
 import {Result, ResultStatus} from "../../common/types/result.type";
@@ -11,8 +11,15 @@ import {
     RegistrationInputDto,
     UserInfoDto
 } from "./auth.type";
+import {inject, injectable} from "inversify";
 
-export const authController = {
+@injectable()
+export default class AuthController {
+    constructor(
+        @inject(AuthService)
+        private authService: AuthService
+    ) {}
+
     async loginUser(req: RequestWithBody<LoginInputDto>, res: Response) {
         try {
             const loginCommand: LoginUserDto = {
@@ -22,7 +29,7 @@ export const authController = {
                 userAgent: req.headers['user-agent'] || 'Unknown'
             };
 
-            const result: Result<LoginSuccessDto | null> = await authService.loginUser(loginCommand);
+            const result: Result<LoginSuccessDto | null> = await this.authService.loginUser(loginCommand);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).send(result.extensions);
@@ -45,7 +52,7 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async refreshToken(req: RequestWithRefreshToken, res: Response) {
         try {
@@ -60,7 +67,7 @@ export const authController = {
             }
 
             const refreshToken: string = req.cookies.refreshToken;
-            const result: Result<LoginSuccessDto> = await authService.refreshTokens(refreshToken);
+            const result: Result<LoginSuccessDto> = await this.authService.refreshTokens(refreshToken);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status))
@@ -84,7 +91,7 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async logout(req: RequestWithRefreshToken, res: Response) {
         try {
@@ -99,7 +106,7 @@ export const authController = {
             }
 
             const refreshToken: string = req.cookies.refreshToken;
-            const result: Result = await authService.logout(refreshToken);
+            const result: Result = await this.authService.logout(refreshToken);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status))
@@ -117,11 +124,11 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async registerUser(req: RequestWithBody<RegistrationInputDto>, res: Response) {
         try {
-            const result: Result = await authService.registerUser(req.body);
+            const result: Result = await this.authService.registerUser(req.body);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).json({
@@ -139,11 +146,11 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async confirmRegistration(req: RequestWithBody<RegistrationConfirmationDto>, res: Response) {
         try {
-            const result: Result = await authService.confirmRegistration(req.body.code);
+            const result: Result = await this.authService.confirmRegistration(req.body.code);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).json({
@@ -161,11 +168,11 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async resendConfirmationEmail(req: RequestWithBody<RegistrationEmailResendingDto>, res: Response) {
         try {
-            const result: Result = await authService.resendConfirmationEmail(req.body.email);
+            const result: Result = await this.authService.resendConfirmationEmail(req.body.email);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).json({
@@ -183,7 +190,7 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
 
     async getCurrentUser(req: Request, res: Response) {
         try {
@@ -197,7 +204,7 @@ export const authController = {
                 return;
             }
 
-            const result: Result<UserInfoDto> = await authService.getCurrentUser(req.userId);
+            const result: Result<UserInfoDto> = await this.authService.getCurrentUser(req.userId);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).send(result.extensions);
@@ -213,10 +220,11 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
+
     async passwordRecovery(req: RequestWithBody<PasswordRecoveryInputDto>, res: Response) {
         try {
-            const result: Result = await authService.initiatePasswordRecovery(req.body.email);
+            const result: Result = await this.authService.initiatePasswordRecovery(req.body.email);
 
             if (result.status !== ResultStatus.Success) {
                 res.status(resultCodeToHttpException(result.status)).json({
@@ -234,10 +242,11 @@ export const authController = {
                 }]
             });
         }
-    },
+    }
+
     async setNewPassword(req: RequestWithBody<NewPasswordInputDto>, res: Response) {
         try {
-            const result: Result = await authService.setNewPassword(
+            const result: Result = await this.authService.setNewPassword(
                 req.body.recoveryCode,
                 req.body.newPassword
             );

@@ -10,4 +10,3 @@ const startApp = async () => {
 }
 
 startApp()
-

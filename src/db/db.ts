@@ -8,7 +8,7 @@ import {InvalidRefreshTokenType} from "../features/auth/auth.type";
 import {SecurityDeviceType} from "../features/security-devices/security-device.type";
 import {RateLimitType} from "../common/rate-limit/rate-limit.type";
 
-const url = SETTINGS.MONGO_URL
+const url: string | undefined = SETTINGS.MONGO_URL
 
 if (!url) {
     throw Error('!!! URL has not been found')

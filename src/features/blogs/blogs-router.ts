@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {blogsController} from "./blogs-controller";
+import BlogsController from "./blogs-controller";
 import {
     blogDescriptionValidator,
     blogNameValidator,
@@ -9,14 +9,17 @@ import {
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {authAdminMiddleware} from "../auth/auth-admin-middleware";
 import {validateBlogExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
+import container from "../../container/inversify.config";
 
 const blogsRouter: Router = Router();
 
-blogsRouter.get('/', blogsController.getBlogs);
+const blogsController: BlogsController = container.get<BlogsController>(BlogsController);
+
+blogsRouter.get('/', blogsController.getBlogs.bind(blogsController));
 
 blogsRouter.get('/:id',
     validateBlogExistsMiddleware,
-    blogsController.getBlogById);
+    blogsController.getBlogById.bind(blogsController));
 
 blogsRouter.post('/',
     authAdminMiddleware,
@@ -24,10 +27,10 @@ blogsRouter.post('/',
     blogDescriptionValidator,
     blogWebsiteUrlValidator,
     errorResultMiddleware,
-    blogsController.createBlog);
+    blogsController.createBlog.bind(blogsController));
 
 blogsRouter.get('/:id/posts',
-    blogsController.getPostsByBlogId);
+    blogsController.getPostsByBlogId.bind(blogsController));
 
 blogsRouter.post('/:id/posts',
     authAdminMiddleware,
@@ -35,7 +38,7 @@ blogsRouter.post('/:id/posts',
     postShortDescriptionValidator,
     postContentValidator,
     errorResultMiddleware,
-    blogsController.createPostByBlogId);
+    blogsController.createPostByBlogId.bind(blogsController));
 
 blogsRouter.put('/:id',
     authAdminMiddleware,
@@ -44,11 +47,11 @@ blogsRouter.put('/:id',
     blogDescriptionValidator,
     blogWebsiteUrlValidator,
     errorResultMiddleware,
-    blogsController.updateBlog);
+    blogsController.updateBlog.bind(blogsController));
 
 blogsRouter.delete('/:id',
     authAdminMiddleware,
     validateBlogExistsMiddleware,
-    blogsController.deleteBlog);
+    blogsController.deleteBlog.bind(blogsController));
 
 export default blogsRouter;

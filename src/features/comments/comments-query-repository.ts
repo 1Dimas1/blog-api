@@ -1,14 +1,16 @@
 import {CommentDBType, CommentPaginatedViewModel, CommentViewModel, QueryCommentType} from "./comment.type";
 import {commentCollection} from "../../db/db";
 import {ObjectId} from "mongodb";
+import {injectable} from "inversify";
 
-export const commentsQueryRepository = {
+@injectable()
+export default class CommentsQueryRepository {
 
     async getCommentById(id: string): Promise<CommentViewModel | null> {
         const comment: CommentDBType | null = await commentCollection.findOne({ _id: new ObjectId(id) });
         if (!comment) return null;
         return this._mapToOutput(comment);
-    },
+    }
 
     async getCommentsByPostId(
         postId: string,
@@ -33,7 +35,7 @@ export const commentsQueryRepository = {
             totalCount,
             items: comments.map(comment => this._mapToOutput(comment))
         };
-    },
+    }
 
     _mapToOutput(comment: CommentDBType): CommentViewModel {
         return {
@@ -42,5 +44,5 @@ export const commentsQueryRepository = {
             commentatorInfo: comment.commentatorInfo,
             createdAt: comment.createdAt
         };
-    },
+    }
 }

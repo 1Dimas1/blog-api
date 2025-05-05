@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import {Result, ResultStatus} from "../../common/types/result.type";
-import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
+import InvalidRefreshTokenService from "./invalid.refresh.tokens-service";
+import {inject, injectable} from "inversify";
 
 export type AccessTokenPayload = {
     userId: string;
@@ -11,14 +12,17 @@ export type RefreshTokenPayload = {
     deviceId: string;
 };
 
-export const jwtService = {
+@injectable()
+export class JwtService {
+    constructor(@inject(InvalidRefreshTokenService) private invalidRefreshTokenService: InvalidRefreshTokenService) {}
+
     createAccessToken(userId: string): string {
         return jwt.sign(
             { userId },
             process.env.JWT_ACCESS_SECRET!,
             { expiresIn: process.env.JWT_ACCESS_TIME }
         );
-    },
+    }
 
     createRefreshToken(userId: string, deviceId: string): string {
         return jwt.sign(
@@ -26,7 +30,7 @@ export const jwtService = {
             process.env.JWT_REFRESH_SECRET!,
             { expiresIn: process.env.JWT_REFRESH_TIME }
         );
-    },
+    }
 
     verifyAccessToken(token: string): Result<AccessTokenPayload> {
         try {
@@ -50,11 +54,11 @@ export const jwtService = {
                 }]
             };
         }
-    },
+    }
 
     async verifyRefreshToken(token: string): Promise<Result<RefreshTokenPayload>> {
         try {
-            const isTokenInvalid: boolean = await invalidRefreshTokenService.isTokenInvalid(token);
+            const isTokenInvalid: boolean = await this.invalidRefreshTokenService.isTokenInvalid(token);
             if (isTokenInvalid) {
                 return {
                     status: ResultStatus.Unauthorized,
@@ -86,7 +90,7 @@ export const jwtService = {
                 }]
             };
         }
-    },
+    }
 
     extractAccessTokenFromHeader(authHeader: string | undefined): Result<string> {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -108,5 +112,5 @@ export const jwtService = {
             data: token,
             extensions: []
         };
-    },
-};
+    }
+}

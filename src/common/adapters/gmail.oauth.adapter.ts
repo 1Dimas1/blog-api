@@ -1,23 +1,26 @@
 import {OAuth2Client} from "google-auth-library";
 import {OAuthCredentials} from "../types/oauth.type";
+import {inject, injectable} from "inversify";
+import {TYPES} from "../types/identifiers";
 
 export interface IOAuthAdapter {
     getAccessToken(): Promise<string>;
     refreshAccessToken(): Promise<string>;
 }
 
+@injectable()
 export class GmailOAuthAdapter implements IOAuthAdapter {
     private oAuth2Client: OAuth2Client;
 
-    constructor(private readonly credentials: OAuthCredentials) {
+    constructor(@inject(TYPES.OAuthCredentials) private credentials: OAuthCredentials) {
         this.oAuth2Client = new OAuth2Client(
-            credentials.clientId,
-            credentials.clientSecret,
+            this.credentials.clientId,
+            this.credentials.clientSecret,
             'https://developers.google.com/oauthplayground'
         );
 
         this.oAuth2Client.setCredentials({
-            refresh_token: credentials.refreshToken
+            refresh_token: this.credentials.refreshToken
         });
     }
 

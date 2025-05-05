@@ -1,12 +1,16 @@
 import {NextFunction, Response} from "express";
 import {HTTP_CODES} from "../../common/http.statuses";
-import {AccessTokenPayload, jwtService} from "./jwt-service";
+import {AccessTokenPayload, JwtService} from "./jwt-service";
 import {Result, ResultStatus} from "../../common/types/result.type";
-import {usersRepository} from "../users/users-repository";
+import UsersRepository from "../users/users-repository";
 import {RequestWithAccessToken} from "../../common/types/request.type";
+import container from "../../container/inversify.config";
 
 
 export const authGuard = async (req: RequestWithAccessToken, res: Response, next: NextFunction) => {
+    const jwtService: JwtService = container.get(JwtService)
+    const userRepository: UsersRepository = container.get(UsersRepository)
+
     try {
         const tokenResult: Result<string> = jwtService.extractAccessTokenFromHeader(req.headers.authorization);
 
@@ -19,7 +23,7 @@ export const authGuard = async (req: RequestWithAccessToken, res: Response, next
 
         if (verifyResult.status === ResultStatus.Success) {
             const userId: string= verifyResult.data!.userId;
-            const user: boolean = await usersRepository.doesExistById(userId)
+            const user: boolean = await userRepository.doesExistById(userId)
 
             if(!user) {
                 res.status(HTTP_CODES.UNAUTHORIZED_401).json({

@@ -1,21 +1,42 @@
 import {LoginSuccessDto, LoginUserDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
 import {Result, ResultStatus} from "../../common/types/result.type";
-import {jwtService, RefreshTokenPayload} from "./jwt-service";
+import {JwtService, RefreshTokenPayload} from "./jwt-service";
 import {WithId} from "mongodb";
 import {UserDBType, UserType} from "../users/user.type";
-import {usersRepository} from "../users/users-repository";
-import {bcryptService} from "./bcrypt-service";
-import {emailComposition} from "../../composition-root/email.composition";
-import {usersService} from "../users/users-service";
+import UsersRepository from "../users/users-repository";
+import {BcryptService} from "./bcrypt-service";
+import UsersService from "../users/users-service";
 import {v4 as uuidv4} from "uuid";
-import {invalidRefreshTokenService} from "./invalid.refresh.tokens-service";
-import {securityDevicesService} from "../security-devices/security-devices.service";
+import InvalidRefreshTokenService from "./invalid.refresh.tokens-service";
+import SecurityDevicesService from "../security-devices/security-devices.service";
 import {SecurityDeviceType} from "../security-devices/security-device.type";
+import {inject, injectable} from "inversify";
+import {EmailManager} from "../../common/managers/email.manager";
+import {EmailTemplateManager} from "../../common/managers/email-template.manager";
+import {TYPES} from "../../common/types/identifiers";
 
-export const authService = {
+@injectable()
+export default class AuthService {
+    constructor(
+        @inject(TYPES.IEmailManager)
+        private emailManager: EmailManager,
+        @inject(TYPES.IEmailTemplateManager)
+        private emailTemplateManager: EmailTemplateManager,
+        @inject(SecurityDevicesService)
+        private securityDevicesService: SecurityDevicesService,
+        @inject(UsersRepository)
+        private usersRepository: UsersRepository,
+        @inject(UsersService)
+        private usersService: UsersService,
+        @inject(JwtService)
+        private jwtService: JwtService,
+        @inject(BcryptService)
+        private bcryptService: BcryptService,
+        @inject(InvalidRefreshTokenService)
+        private invalidRefreshTokenService: InvalidRefreshTokenService
 
-    emailManager: emailComposition.getEmailManager(),
-    emailTemplateManager: emailComposition.getEmailTemplateManager(),
+    ) {}
+
 
     async loginUser(command: LoginUserDto): Promise<Result<LoginSuccessDto | null>> {
         const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(
@@ -32,25 +53,25 @@ export const authService = {
             };
         }
 
-        const deviceId: string = await securityDevicesService.createUserDevice(
+        const deviceId: string = await this.securityDevicesService.createUserDevice(
             result.data!._id.toString(),
             command.ip || 'unknown',
             command.userAgent || 'Unknown',
             new Date(Date.now() + parseInt(process.env.JWT_REFRESH_TIME!)).toISOString()
         );
 
-        const accessToken: string = jwtService.createAccessToken(result.data!._id.toString());
-        const refreshToken: string = jwtService.createRefreshToken(result.data!._id.toString(), deviceId);
+        const accessToken: string = this.jwtService.createAccessToken(result.data!._id.toString());
+        const refreshToken: string = this.jwtService.createRefreshToken(result.data!._id.toString(), deviceId);
 
         return {
             status: ResultStatus.Success,
             data: { accessToken,  refreshToken },
             extensions: [],
         };
-    },
+    }
 
     async refreshTokens(refreshToken: string): Promise<Result<LoginSuccessDto>> {
-        const verifyResult: Result<RefreshTokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+        const verifyResult: Result<RefreshTokenPayload> = await this.jwtService.verifyRefreshToken(refreshToken);
 
         if (verifyResult.status !== ResultStatus.Success) {
             return {
@@ -60,12 +81,12 @@ export const authService = {
             };
         }
 
-        await invalidRefreshTokenService.addToBlacklist(refreshToken);
+        await this.invalidRefreshTokenService.addToBlacklist(refreshToken);
 
         const userId: string = verifyResult.data!.userId;
         const deviceId: string = verifyResult.data!.deviceId;
 
-        const deviceExistResult: Result<SecurityDeviceType> = await securityDevicesService.findDevice(userId, deviceId)
+        const deviceExistResult: Result<SecurityDeviceType> = await this.securityDevicesService.findDevice(userId, deviceId)
 
         if (deviceExistResult.status !== ResultStatus.Success) {
             return {
@@ -75,10 +96,10 @@ export const authService = {
             };
         }
 
-        await securityDevicesService.updateLastActiveDate(deviceId, new Date().toISOString());
+        await this.securityDevicesService.updateLastActiveDate(deviceId, new Date().toISOString());
 
-        const newAccessToken: string = jwtService.createAccessToken(userId);
-        const newRefreshToken: string = jwtService.createRefreshToken(userId, deviceId);
+        const newAccessToken: string = this.jwtService.createAccessToken(userId);
+        const newRefreshToken: string = this.jwtService.createRefreshToken(userId, deviceId);
 
         return {
             status: ResultStatus.Success,
@@ -88,10 +109,10 @@ export const authService = {
             },
             extensions: []
         };
-    },
+    }
 
     async logout(refreshToken: string): Promise<Result> {
-        const verifyResult: Result<RefreshTokenPayload> = await jwtService.verifyRefreshToken(refreshToken);
+        const verifyResult: Result<RefreshTokenPayload> = await this.jwtService.verifyRefreshToken(refreshToken);
 
         if (verifyResult.status !== ResultStatus.Success) {
             return {
@@ -101,12 +122,12 @@ export const authService = {
             };
         }
 
-        await invalidRefreshTokenService.addToBlacklist(refreshToken);
+        await this.invalidRefreshTokenService.addToBlacklist(refreshToken);
 
         const userId: string = verifyResult.data!.userId;
         const deviceId: string = verifyResult.data!.deviceId;
 
-        const deviceExistResult: Result<SecurityDeviceType> = await securityDevicesService.findDevice(userId, deviceId)
+        const deviceExistResult: Result<SecurityDeviceType> = await this.securityDevicesService.findDevice(userId, deviceId)
 
         if (deviceExistResult.status !== ResultStatus.Success) {
             return {
@@ -116,17 +137,17 @@ export const authService = {
             };
         }
 
-        await securityDevicesService.terminateSession(verifyResult.data!.deviceId);
+        await this.securityDevicesService.terminateSession(verifyResult.data!.deviceId);
         return {
             status: ResultStatus.Success,
             data: null,
             extensions: []
         };
-    },
+    }
 
     async registerUser(input: RegistrationInputDto): Promise<Result> {
-        const existingUser: UserDBType | null = await usersRepository.findByLoginOrEmail(input.login)
-            || await usersRepository.findByLoginOrEmail(input.email);
+        const existingUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(input.login)
+            || await this.usersRepository.findByLoginOrEmail(input.email);
 
         if (existingUser) {
             return {
@@ -139,8 +160,8 @@ export const authService = {
             };
         }
 
-        const newUser: UserType = await usersService.createUserEntity(input, false);
-        await usersRepository.createUser(newUser)
+        const newUser: UserType = await this.usersService.createUserEntity(input, false);
+        await this.usersRepository.createUser(newUser)
 
         const { subject, html } = this.emailTemplateManager.getConfirmationEmailTemplate(
             newUser.emailConfirmation.confirmationCode!
@@ -152,10 +173,10 @@ export const authService = {
             data: null,
             extensions: []
         };
-    },
+    }
 
     async confirmRegistration(code: string): Promise<Result> {
-        const user: UserDBType | null = await usersRepository.findByConfirmationCode(code);
+        const user: UserDBType | null = await this.usersRepository.findByConfirmationCode(code);
 
         if (!user) {
             return {
@@ -190,17 +211,17 @@ export const authService = {
             };
         }
 
-        await usersRepository.confirmEmail(user._id.toString());
+        await this.usersRepository.confirmEmail(user._id.toString());
 
         return {
             status: ResultStatus.Success,
             data: null,
             extensions: []
         };
-    },
+    }
 
     async resendConfirmationEmail(email: string): Promise<Result> {
-        const user: UserDBType | null = await usersRepository.findByLoginOrEmail(email);
+        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
 
         if (!user) {
             return {
@@ -225,7 +246,7 @@ export const authService = {
         }
 
         const newConfirmationCode: string = uuidv4();
-        await usersRepository.updateConfirmationCode(user._id.toString(), newConfirmationCode);
+        await this.usersRepository.updateConfirmationCode(user._id.toString(), newConfirmationCode);
 
         const { subject, html } = this.emailTemplateManager.getConfirmationEmailTemplate(newConfirmationCode);
         this.emailManager.sendEmail(email, subject, html).catch();
@@ -235,10 +256,10 @@ export const authService = {
             data: null,
             extensions: []
         };
-    },
+    }
 
     async initiatePasswordRecovery(email: string): Promise<Result> {
-        const user: UserDBType | null = await usersRepository.findByLoginOrEmail(email);
+        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
 
         if (user) {
             const recoveryCode: string = uuidv4();
@@ -246,7 +267,7 @@ export const authService = {
             const expirationDate = new Date();
             expirationDate.setMinutes(expirationDate.getMinutes() + 5);
 
-            await usersRepository.setPasswordRecoveryCode(
+            await this.usersRepository.setPasswordRecoveryCode(
                 user._id.toString(),
                 recoveryCode,
                 expirationDate.toISOString()
@@ -261,10 +282,10 @@ export const authService = {
             data: null,
             extensions: []
         };
-    },
+    }
 
     async setNewPassword(recoveryCode: string, newPassword: string): Promise<Result> {
-        const user: UserDBType | null = await usersRepository.findByPasswordRecoveryCode(recoveryCode);
+        const user: UserDBType | null = await this.usersRepository.findByPasswordRecoveryCode(recoveryCode);
 
         if (!user) {
             return {
@@ -290,22 +311,22 @@ export const authService = {
             };
         }
 
-        const passwordHash: string = await bcryptService.hashPassword(newPassword);
+        const passwordHash: string = await this.bcryptService.hashPassword(newPassword);
 
-        await usersRepository.updatePassword(user._id.toString(), passwordHash);
+        await this.usersRepository.updatePassword(user._id.toString(), passwordHash);
 
         return {
             status: ResultStatus.Success,
             data: null,
             extensions: []
         };
-    },
+    }
 
     async checkUserCredentials(
         loginOrEmail: string,
         password: string
     ): Promise<Result<WithId<UserDBType> | null>> {
-        const user: UserDBType | null = await usersRepository.findByLoginOrEmail(loginOrEmail);
+        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
 
         if (!user) {
             return {
@@ -316,7 +337,7 @@ export const authService = {
             };
         }
 
-        const isPassCorrect = await bcryptService.checkPassword(
+        const isPassCorrect = await this.bcryptService.checkPassword(
             password,
             user.password
         );
@@ -335,10 +356,10 @@ export const authService = {
             data: user,
             extensions: []
         };
-    },
+    }
 
     async getCurrentUser(userId: string): Promise<Result<UserInfoDto>> {
-        const user: UserDBType | null = await usersRepository.findUserById(userId);
+        const user: UserDBType | null = await this.usersRepository.findUserById(userId);
 
         if (!user) {
             return {
@@ -360,5 +381,5 @@ export const authService = {
             },
             extensions: []
         };
-    },
-};
+    }
+}

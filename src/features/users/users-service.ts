@@ -1,13 +1,24 @@
 import {DeleteResult, InsertOneResult} from "mongodb";
 import {UserDBType, UserInputType, UserType, UserViewModel} from "./user.type";
-import {usersRepository} from "./users-repository";
-import {bcryptService} from "../auth/bcrypt-service";
+import UsersRepository from "./users-repository";
+import {BcryptService} from "../auth/bcrypt-service";
 import {v4 as uuidv4} from "uuid";
 import {RegistrationInputDto} from "../auth/auth.type";
 import {SETTINGS} from "../../settings";
-import {usersQueryRepository} from "./users-queryRepository";
+import UsersQueryRepository from "./users-query-repository";
+import {inject, injectable} from "inversify";
 
-export const usersService = {
+@injectable()
+export default class UsersService {
+    constructor(
+        @inject(UsersRepository)
+        private usersRepository: UsersRepository,
+        @inject(UsersQueryRepository)
+        private usersQueryRepository: UsersQueryRepository,
+        @inject(BcryptService)
+        private bcryptService: BcryptService,
+    ) {}
+
     async createUser(userData: UserInputType): Promise<UserViewModel | null> {
         //TODO
         // const loginUser: UserDBType | null = await usersRepository.findByLoginOrEmail(userData.login);
@@ -18,31 +29,34 @@ export const usersService = {
 
         const newUser: UserType = await this.createUserEntity(userData)
 
-        const result: InsertOneResult<UserDBType> = await usersRepository.createUser(newUser);
-        return usersQueryRepository.findUserById(result.insertedId.toString())
-    },
+        const result: InsertOneResult<UserDBType> = await this.usersRepository.createUser(newUser);
+        return this.usersQueryRepository.findUserById(result.insertedId.toString())
+    }
+
     async deleteUser(id: string): Promise<boolean> {
-        const result: DeleteResult = await usersRepository.deleteUser(id)
+        const result: DeleteResult = await this.usersRepository.deleteUser(id)
         return result.deletedCount === 1
-    },
+    }
+
     async findDuplicateCredential(login: string, email: string): Promise<string | null> {
-        const loginUser: UserDBType | null = await usersRepository.findByLoginOrEmail(login);
+        const loginUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(login);
         if (loginUser) {
             return 'login';
         }
 
-        const emailUser: UserDBType | null = await usersRepository.findByLoginOrEmail(email);
+        const emailUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
         if (emailUser) {
             return 'email';
         }
 
         return null;
-    },
+    }
+
     async createUserEntity(
         input: UserInputType | RegistrationInputDto,
         isConfirmed: boolean = true
     ): Promise<UserType> {
-        const hashedPassword = await bcryptService.hashPassword(input.password);
+        const hashedPassword = await this.bcryptService.hashPassword(input.password);
         const confirmationCode = !isConfirmed ? uuidv4() : null;
 
         return {
