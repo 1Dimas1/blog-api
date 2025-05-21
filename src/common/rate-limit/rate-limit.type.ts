@@ -1,3 +1,5 @@
+import {HydratedDocument, Model} from "mongoose";
+
 export type RateLimitType = {
     ip: string;
     url: string;
@@ -14,3 +16,7 @@ export const RATE_LIMIT = {
     MAX_ATTEMPTS: 5,
     RETRY_AFTER: 10
 }
+
+export type RateLimitDocument = HydratedDocument<RateLimitType>
+
+export type RateLimitModelType = Model<RateLimitType, {}, {}, {}, RateLimitDocument>

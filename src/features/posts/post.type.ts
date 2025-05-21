@@ -1,21 +1,19 @@
-import {ObjectId, SortDirection, WithId} from "mongodb";
-
+import {SortDirection} from "mongodb";
+import mongoose, {HydratedDocument, Model} from "mongoose";
 export type PostType = {
     title: string,
     shortDescription: string,
     content: string,
-    blogId: ObjectId,
+    blogId: mongoose.Types.ObjectId,
     blogName: string,
-    createdAt: string
+    createdAt: Date
 }
-
-export type PostDBType = WithId<PostType>
 
 export type PostDBUpdateType = {
     title: string,
     shortDescription: string,
     content: string,
-    blogId: ObjectId,
+    blogId: mongoose.Types.ObjectId,
 }
 
 export type PostInputType = {
@@ -47,7 +45,7 @@ export type QueryPostType = {
     pageSize?: string
 }
 
-export type PostsPaginatedViewModel = {
+export type PostsPaginatedViewType = {
     pagesCount: number,
     page: number,
     pageSize: number,
@@ -58,3 +56,7 @@ export type PostsPaginatedViewModel = {
 export type PostIdParams = {
     id: string
 }
+
+export type PostDocument = HydratedDocument<PostType>
+
+export type PostModelType = Model<PostType, {}, {}, {}, PostDocument>

@@ -7,7 +7,7 @@ export const blogTestFactory = {
         return {
             name: params.name ?? 'blog name',
             description: params.description ?? 'blog description',
-            websiteUrl: params.websiteUrl ?? 'http://someValidUrl.com',
+            websiteUrl: params.websiteUrl ?? 'https://someValidUrl.com',
         }
     },
 
@@ -32,7 +32,7 @@ export const blogTestFactory = {
                 this.createBlogInputDto({
                     name: `Blog ${i + 1}`,
                     description: `Description ${i + 1}`,
-                    websiteUrl: `http://blog${i + 1}.com`
+                    websiteUrl: `https://blog${i + 1}.com`
                 })
             );
             blogs.push(blog.body);

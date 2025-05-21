@@ -1,5 +1,5 @@
-import {DeleteResult, InsertOneResult, UpdateResult} from "mongodb";
-import {BlogDBType, BlogInputType, BlogType, BlogViewModel} from "./blog.type";
+import {DeleteResult, UpdateResult} from "mongodb";
+import {BlogDocument, BlogInputType, BlogType, BlogViewType} from "./blog.type";
 import BlogsRepository from "./blogs-repository";
 import BlogsQueryRepository from "./blogs-query-repository";
 import {injectable, inject} from "inversify";
@@ -12,16 +12,16 @@ export default class BlogsService {
         @inject(BlogsQueryRepository)
         private blogsQueryRepository: BlogsQueryRepository,) {}
 
-    async createBlog(blogData: BlogInputType): Promise<BlogViewModel | null> {
+    async createBlog(blogData: BlogInputType): Promise<BlogViewType | null> {
         const blog: BlogType = {
             name: blogData.name,
             description: blogData.description,
             websiteUrl: blogData.websiteUrl,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
             isMembership: false
         }
-        const result: InsertOneResult<BlogDBType> = await this.blogsRepository.createBlog(blog);
-        return this.blogsQueryRepository.findBlogById(result.insertedId.toString());
+        const result: BlogDocument = await this.blogsRepository.createBlog(blog);
+        return this.blogsQueryRepository.findBlogById(result.id);
     }
 
     async updateBlog(id: string, blogData: BlogInputType): Promise<boolean> {
@@ -30,7 +30,7 @@ export default class BlogsService {
             description: blogData.description,
             websiteUrl: blogData.websiteUrl,
         }
-        const result: UpdateResult<BlogDBType> = await this.blogsRepository.updateBlog(id, blog)
+        const result: UpdateResult<BlogDocument> = await this.blogsRepository.updateBlog(id, blog)
         return result.matchedCount === 1
     }
 

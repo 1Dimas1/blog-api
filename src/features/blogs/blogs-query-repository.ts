@@ -1,7 +1,7 @@
-import {BlogDBType, BlogViewModel} from "./blog.type";
-import {blogCollection} from "../../db/db";
-import {ObjectId, SortDirection} from "mongodb";
+import {BlogDocument, BlogViewType} from "./blog.type";
+import {SortDirection} from "mongodb";
 import {injectable} from "inversify";
+import {BlogModel} from "./blog-model";
 
 @injectable()
 export default class BlogsQueryRepository {
@@ -11,33 +11,33 @@ export default class BlogsQueryRepository {
         pageNumber: number,
         pageSize: number,
         filter: any
-    ): Promise<BlogViewModel[]> {
-        const blogs: BlogDBType[] = await blogCollection
+    ): Promise<BlogViewType[]> {
+        const blogs: BlogDocument[] = await BlogModel
             .find(filter)
             .sort({ [sortBy]: sortDirection })
             .skip((pageNumber - 1) * pageSize)
             .limit(pageSize)
-            .toArray();
+            .exec();
 
         return blogs.map(this._mapToOutput);
     }
 
-    async findBlogById(id: string): Promise<BlogViewModel | null> {
-        const blog: BlogDBType | null = await blogCollection.findOne({ _id: new ObjectId(id) });
+    async findBlogById(id: string): Promise<BlogViewType | null> {
+        const blog: BlogDocument | null = await BlogModel.findById(id).exec();
         return blog ? this._mapToOutput(blog) : null;
     }
 
     async getBlogsCount(filter: any): Promise<number> {
-        return blogCollection.countDocuments(filter);
+        return BlogModel.countDocuments(filter).exec();
     }
 
-    _mapToOutput(blog: BlogDBType): BlogViewModel {
+    _mapToOutput(blog: BlogDocument): BlogViewType {
         return {
             id: blog._id.toString(),
             name: blog.name,
             description: blog.description,
             websiteUrl: blog.websiteUrl,
-            createdAt: blog.createdAt,
+            createdAt: blog.createdAt.toISOString(),
             isMembership: blog.isMembership
         };
     }

@@ -1,23 +1,23 @@
-import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
-import {CommentType} from "./comment.type";
-import {commentCollection} from "../../db/db";
+import {DeleteResult, ObjectId, UpdateResult} from "mongodb";
+import {CommentDocument, CommentType} from "./comment.type";
 import {injectable} from "inversify";
+import {CommentModel} from "./comment-model";
 
 @injectable()
 export default class CommentsRepository {
 
-    async createComment(comment: CommentType): Promise<InsertOneResult<CommentType>> {
-        return commentCollection.insertOne(comment);
+    async createComment(comment: CommentType): Promise<CommentDocument> {
+        return CommentModel.insertOne(comment);
     }
 
-    async updateComment(id: string, content: string): Promise<UpdateResult<CommentType>> {
-        return commentCollection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { content } }
+    async updateComment(id: string, content: string): Promise<UpdateResult<CommentDocument>> {
+        return CommentModel.updateOne(
+            { _id: id },
+            { content }
         );
     }
 
     async deleteComment(id: string): Promise<DeleteResult> {
-        return commentCollection.deleteOne({ _id: new ObjectId(id) });
+        return CommentModel.deleteOne({ _id: new ObjectId(id) });
     }
 }

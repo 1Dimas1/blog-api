@@ -1,8 +1,7 @@
-import {CommentDBType, CommentInputType, CommentType, CommentViewModel} from "./comment.type";
+import {CommentDocument, CommentInputType, CommentType, CommentViewType} from "./comment.type";
 import PostsRepository from "../posts/posts-repository";
-import {PostDBType} from "../posts/post.type";
-import {InsertOneResult} from "mongodb";
-import {UserDBType} from "../users/user.type";
+import {PostDocument} from "../posts/post.type";
+import {UserDocument} from "../users/user.type";
 import UsersRepository from "../users/users-repository";
 import {Result, ResultStatus} from "../../common/types/result.type";
 import CommentsQueryService from "./comments-query-service";
@@ -26,8 +25,8 @@ export default class CommentsService {
         postId: string,
         commentInputData: CommentInputType,
         userId: string,
-    ): Promise<Result<CommentViewModel>> {
-        const post: PostDBType | null = await this.postsRepository.findPostById(postId);
+    ): Promise<Result<CommentViewType>> {
+        const post: PostDocument | null = await this.postsRepository.findPostById(postId);
         if (!post) {
             return {
                 status: ResultStatus.NotFound,
@@ -39,21 +38,20 @@ export default class CommentsService {
             };
         }
 
-        const user: UserDBType | null  = await this.usersRepository.findUserById(userId);
-        const userLogin: string = user!.login
+        const user: UserDocument | null  = await this.usersRepository.findUserById(userId);
 
         const newComment: CommentType = {
             content: commentInputData.content,
             commentatorInfo: {
-                userId,
-                userLogin
+                userId: user!._id,
+                userLogin: user!.login
             },
             postId: post._id,
-            createdAt: new Date().toISOString()
+            createdAt: new Date()
         };
 
-        const result: InsertOneResult<CommentDBType> = await this.commentsRepository.createComment(newComment);
-        const createdComment: CommentViewModel | null = await this.commentsQueryService.getCommentById(result.insertedId.toString());
+        const result: CommentDocument = await this.commentsRepository.createComment(newComment);
+        const createdComment: CommentViewType | null = await this.commentsQueryService.getCommentById(result.id);
 
         return {
             status: ResultStatus.Success,
@@ -67,7 +65,7 @@ export default class CommentsService {
         input: CommentInputType,
         userId: string
     ): Promise<Result> {
-        const comment: CommentViewModel | null = await this.commentsQueryService.getCommentById(commentId);
+        const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(commentId);
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,
@@ -101,7 +99,7 @@ export default class CommentsService {
     }
 
     async deleteComment(commentId: string, userId: string): Promise<Result> {
-        const comment: CommentViewModel | null = await this.commentsQueryService.getCommentById(commentId);
+        const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(commentId);
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,

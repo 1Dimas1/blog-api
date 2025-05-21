@@ -1,7 +1,7 @@
 import {Response} from 'express'
 import { inject, injectable } from 'inversify';
 import {
-    BlogInputType, BlogViewModel, BlogsPaginatedViewModel, QueryBlogType,
+    BlogInputType, BlogViewType, BlogsPaginatedViewType, QueryBlogType,
     BlogIdParams,
 } from "./blog.type";
 import {
@@ -16,7 +16,7 @@ import {paginationBlogQueries, paginationPostQueries} from "../../common/helpers
 import {
     PostCreateByBlogIdInputType,
     PostViewType,
-    PostsPaginatedViewModel,
+    PostsPaginatedViewType,
     QueryPostType,
     PostInputType
 } from "../posts/post.type";
@@ -41,14 +41,14 @@ export default class BlogsController {
         private postsQueryService: PostsQueryService
     ) {}
 
-    async getBlogs(req: RequestWithQuery<QueryBlogType>, res: Response<BlogsPaginatedViewModel>) {
+    async getBlogs(req: RequestWithQuery<QueryBlogType>, res: Response<BlogsPaginatedViewType>) {
         const {sortBy, sortDirection, pageNumber, pageSize, searchNameTerm} = paginationBlogQueries(req)
-        const blogs: BlogsPaginatedViewModel = await this.blogsQueryService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
+        const blogs: BlogsPaginatedViewType = await this.blogsQueryService.getBlogs(sortBy, sortDirection, pageNumber, pageSize, searchNameTerm)
         res.status(HTTP_CODES.OK_200).json(blogs)
     }
 
-    async getBlogById(req: RequestWithParams<BlogIdParams>, res: Response<BlogViewModel>) {
-        const blog: BlogViewModel | null = await this.blogsQueryRepository.findBlogById(req.params.id)
+    async getBlogById(req: RequestWithParams<BlogIdParams>, res: Response<BlogViewType>) {
+        const blog: BlogViewType | null = await this.blogsQueryRepository.findBlogById(req.params.id)
         if (!blog) {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
@@ -56,19 +56,19 @@ export default class BlogsController {
         res.status(HTTP_CODES.OK_200).json(blog);
     }
 
-    async getPostsByBlogId(req: RequestWithParamsAndQuery<BlogIdParams, QueryPostType>, res: Response<PostsPaginatedViewModel>)  {
-        const blog: BlogViewModel | null = await this.blogsQueryRepository.findBlogById(req.params.id)
+    async getPostsByBlogId(req: RequestWithParamsAndQuery<BlogIdParams, QueryPostType>, res: Response<PostsPaginatedViewType>)  {
+        const blog: BlogViewType | null = await this.blogsQueryRepository.findBlogById(req.params.id)
         if (!blog) {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
         }
         const {sortBy, sortDirection, pageNumber, pageSize} = paginationPostQueries(req)
-        const posts: PostsPaginatedViewModel = await this.postsQueryService.getPosts(sortBy, sortDirection, pageNumber, pageSize, req.params.id)
+        const posts: PostsPaginatedViewType = await this.postsQueryService.getPosts(sortBy, sortDirection, pageNumber, pageSize, req.params.id)
         res.status(HTTP_CODES.OK_200).json(posts);
     }
 
     async createPostByBlogId(req: RequestWithParamsAndBody<BlogIdParams, PostCreateByBlogIdInputType>, res: Response<PostViewType>) {
-        const blog: BlogViewModel | null = await this.blogsQueryRepository.findBlogById(req.params.id)
+        const blog: BlogViewType | null = await this.blogsQueryRepository.findBlogById(req.params.id)
         if (!blog) {
             res.sendStatus(HTTP_CODES.NOT_FOUND_404)
             return;
@@ -87,8 +87,8 @@ export default class BlogsController {
         res.status(HTTP_CODES.CREATED_201).json(newPost)
     }
 
-    async createBlog(req: RequestWithBody<BlogInputType>, res: Response<BlogViewModel>) {
-        const newBlog: BlogViewModel | null = await this.blogsService.createBlog(req.body)
+    async createBlog(req: RequestWithBody<BlogInputType>, res: Response<BlogViewType>) {
+        const newBlog: BlogViewType | null = await this.blogsService.createBlog(req.body)
         if(!newBlog) {
             res.status(HTTP_CODES.NOT_FOUND_404)
             return

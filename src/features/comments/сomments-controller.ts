@@ -3,8 +3,8 @@ import {RequestWithParams, RequestWithParamsAndBody, RequestWithParamsAndQuery} 
 import {
     CommentIdParams,
     CommentInputType,
-    CommentPaginatedViewModel,
-    CommentViewModel,
+    CommentPaginatedViewType,
+    CommentViewType,
     QueryCommentType
 } from "./comment.type";
 import {paginationCommentQueries} from "../../common/helpers/pagination-values";
@@ -29,7 +29,7 @@ export default class CommentsController {
         try {
             const {postId, sortBy, sortDirection, pageNumber, pageSize} = paginationCommentQueries(req)
 
-            const comments: CommentPaginatedViewModel | null = await this.commentsQueryService.getCommentsByPostId(
+            const comments: CommentPaginatedViewType | null = await this.commentsQueryService.getCommentsByPostId(
                 postId,
                 { pageNumber, pageSize, sortBy, sortDirection }
             );
@@ -47,7 +47,7 @@ export default class CommentsController {
 
     async getComment(req: RequestWithParams<CommentIdParams>, res: Response) {
         try {
-            const comment: CommentViewModel | null = await this.commentsQueryService.getCommentById(req.params.id);
+            const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(req.params.id);
             if (!comment) {
                 res.sendStatus(HTTP_CODES.NOT_FOUND_404);
                 return;
@@ -61,7 +61,7 @@ export default class CommentsController {
 
     async createComment(req: RequestWithParamsAndBody<PostIdParams, CommentInputType>, res: Response) {
         try {
-            const result: Result<CommentViewModel> = await this.commentsService.createComment(
+            const result: Result<CommentViewType> = await this.commentsService.createComment(
                 req.params.id,
                 req.body,
                 req.userId!,

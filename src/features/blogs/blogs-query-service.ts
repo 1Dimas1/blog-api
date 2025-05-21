@@ -1,5 +1,5 @@
 import {SortDirection} from "mongodb";
-import {BlogViewModel, BlogsPaginatedViewModel} from "./blog.type";
+import {BlogViewType, BlogsPaginatedViewType} from "./blog.type";
 import BlogsQueryRepository from "./blogs-query-repository";
 import {inject, injectable} from "inversify";
 
@@ -13,7 +13,7 @@ export default class BlogsQueryService {
         pageNumber: number,
         pageSize: number,
         searchNameTerm: string | null
-    ): Promise<BlogsPaginatedViewModel> {
+    ): Promise<BlogsPaginatedViewType> {
 
         const search = searchNameTerm
             ? {name: {$regex: searchNameTerm, $options: 'i'}}
@@ -22,7 +22,7 @@ export default class BlogsQueryService {
             ...search
         }
 
-        const blogs: BlogViewModel[] = await this.blogsQueryRepository.getBlogs(
+        const blogs: BlogViewType[] = await this.blogsQueryRepository.getBlogs(
             sortBy,
             sortDirection,
             pageNumber,

@@ -1,25 +1,25 @@
-import {InvalidRefreshTokenType} from "./auth.type";
-import {invalidRefreshTokenCollection} from "../../db/db";
-import {DeleteResult, InsertOneResult, WithId} from "mongodb";
+import {InvalidRefreshTokenDocument, InvalidRefreshTokenType} from "./auth.type";
+import {DeleteResult} from "mongodb";
 import {injectable} from "inversify";
+import {InvalidRefreshTokenModel} from "./invalid-refresh-token-model";
 
 @injectable()
 export default class InvalidRefreshTokensRepository {
 
-    async createInvalidToken(token: InvalidRefreshTokenType):Promise<InsertOneResult<InvalidRefreshTokenType>> {
-        return invalidRefreshTokenCollection.insertOne(token)
+    async createInvalidToken(token: InvalidRefreshTokenType):Promise<InvalidRefreshTokenDocument> {
+        return InvalidRefreshTokenModel.insertOne(token)
     }
 
-    async findInvalidToken(token: string): Promise<WithId<InvalidRefreshTokenType> | null> {
-        return invalidRefreshTokenCollection.findOne({ token });
+    async findInvalidToken(token: string): Promise<InvalidRefreshTokenDocument | null> {
+        return InvalidRefreshTokenModel.findOne({ token }).exec();
     }
 
     async deleteInvalidToken(token: string): Promise<DeleteResult> {
-        return invalidRefreshTokenCollection.deleteOne({ token })
+        return InvalidRefreshTokenModel.deleteOne({ token })
     }
 
     async cleanup(): Promise<DeleteResult> {
-        return invalidRefreshTokenCollection.deleteMany({
+        return InvalidRefreshTokenModel.deleteMany({
             expiredAt: { $lt: new Date() }
         });
     }

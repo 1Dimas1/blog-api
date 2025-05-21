@@ -42,7 +42,7 @@ export const commentTestFactory = {
             );
             comments.push(comment);
             // Add delay between creations for sorting tests
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 10));
         }
         return comments;
     }

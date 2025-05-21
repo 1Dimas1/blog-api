@@ -1,6 +1,5 @@
-import {InvalidRefreshTokenType} from "./auth.type";
+import {InvalidRefreshTokenDocument, InvalidRefreshTokenType} from "./auth.type";
 import InvalidRefreshTokensRepository from "./invalid-refresh-tokens.repository";
-import {InsertOneResult, WithId} from "mongodb";
 import {inject, injectable} from "inversify";
 
 @injectable()
@@ -10,7 +9,7 @@ export default class InvalidRefreshTokenService {
         private invalidRefreshTokensRepository: InvalidRefreshTokensRepository
     ) {}
 
-    async addToBlacklist(token: string): Promise<InsertOneResult<InvalidRefreshTokenType>> {
+    async addToBlacklist(token: string): Promise<InvalidRefreshTokenDocument> {
         const invalidToken: InvalidRefreshTokenType = {
             token,
             expiredAt: new Date()
@@ -19,9 +18,7 @@ export default class InvalidRefreshTokenService {
     }
 
     async isTokenInvalid(token: string): Promise<boolean> {
-        const invalidToken: WithId<InvalidRefreshTokenType> | null = await this.invalidRefreshTokensRepository.findInvalidToken(token);
-        if (!invalidToken) return false;
-
-        return true;
+        const invalidToken: InvalidRefreshTokenDocument | null = await this.invalidRefreshTokensRepository.findInvalidToken(token);
+        return invalidToken != null;
     }
 }

@@ -1,42 +1,38 @@
-import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
-import {UserDBType, UserType} from "./user.type";
-import {userCollection} from "../../db/db";
+import {DeleteResult, UpdateResult} from "mongodb";
+import {UserDocument, UserType} from "./user.type";
 import {SETTINGS} from "../../settings";
 import {injectable} from "inversify";
+import {UserModel} from "./user-model";
 
 @injectable()
 export default class UsersRepository {
-    async findByLoginOrEmail(loginOrEmail: string): Promise<UserDBType | null> {
-        return userCollection.findOne({
+    async findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
+        return UserModel.findOne({
             $or: [
                 { email: loginOrEmail },
                 { login: loginOrEmail }
             ]
-        });
+        }).exec();
     }
 
     async doesExistById(id: string): Promise<boolean> {
-        const user: Promise<UserDBType | null> = this.findUserById(id)
-        if (!user) {
-            return false;
-        }
-
-        return true;
+        const user: Promise<UserDocument | null> = this.findUserById(id)
+        return user != null;
     }
 
-    async findUserById(id: string): Promise<UserDBType | null> {
-        return userCollection.findOne({_id: new ObjectId(id)});
+    async findUserById(id: string): Promise<UserDocument | null> {
+        return UserModel.findById(id).exec();
     }
 
-    async findByConfirmationCode(code: string): Promise<UserDBType | null> {
-        return userCollection.findOne({
+    async findByConfirmationCode(code: string): Promise<UserDocument | null> {
+        return UserModel.findOne({
             'emailConfirmation.confirmationCode': code
-        });
+        }).exec();
     }
 
-    async confirmEmail(id: string): Promise<UpdateResult<UserDBType>> {
-        return userCollection.updateOne(
-            { _id: new ObjectId(id) },
+    async confirmEmail(id: string): Promise<UpdateResult<UserDocument>> {
+        return UserModel.updateOne(
+            { _id: id },
             {
                 $set: {
                     'emailConfirmation.isConfirmed': true,
@@ -47,9 +43,9 @@ export default class UsersRepository {
         )
     }
 
-    async updateConfirmationCode(id: string, newConfirmationCode: string): Promise<UpdateResult<UserDBType>> {
-        return userCollection.updateOne(
-            { _id: new ObjectId(id) },
+    async updateConfirmationCode(id: string, newConfirmationCode: string): Promise<UpdateResult<UserDocument>> {
+        return UserModel.updateOne(
+            { _id: id },
             {
                 $set: {
                     'emailConfirmation.confirmationCode': newConfirmationCode,
@@ -59,21 +55,21 @@ export default class UsersRepository {
         );
     }
 
-    async createUser(user: UserType): Promise<InsertOneResult<UserDBType>> {
-        return userCollection.insertOne(user)
+    async createUser(user: UserType): Promise<UserDocument> {
+        return UserModel.insertOne(user)
     }
 
     async deleteUser(id: string): Promise<DeleteResult> {
-        return userCollection.deleteOne({_id: new ObjectId(id)})
+        return UserModel.deleteOne({_id: id})
     }
 
     async setPasswordRecoveryCode(
         userId: string,
         recoveryCode: string,
         expirationDate: string
-    ): Promise<UpdateResult> {
-        return userCollection.updateOne(
-            { _id: new ObjectId(userId) },
+    ): Promise<UpdateResult<UserDocument>> {
+        return UserModel.updateOne(
+            { _id: userId },
             {
                 $set: {
                     'passwordRecovery.recoveryCode': recoveryCode,
@@ -83,15 +79,15 @@ export default class UsersRepository {
         );
     }
 
-    async findByPasswordRecoveryCode(recoveryCode: string): Promise<UserDBType | null> {
-        return userCollection.findOne({
+    async findByPasswordRecoveryCode(recoveryCode: string): Promise<UserDocument | null> {
+        return UserModel.findOne({
             'passwordRecovery.recoveryCode': recoveryCode
-        });
+        }).exec();
     }
 
-    async updatePassword(userId: string, passwordHash: string): Promise<UpdateResult> {
-        return userCollection.updateOne(
-            { _id: new ObjectId(userId) },
+    async updatePassword(userId: string, passwordHash: string): Promise<UpdateResult<UserDocument>> {
+        return UserModel.updateOne(
+            { _id: userId },
             {
                 $set: {
                     password: passwordHash

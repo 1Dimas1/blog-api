@@ -1,21 +1,27 @@
-import {SortDirection, WithId} from "mongodb";
+import {SortDirection} from "mongodb";
+import {HydratedDocument, Model} from "mongoose";
+
+export type EmailConfirmationType = {
+    confirmationCode: string | null;
+    expirationDate: string | null;
+    isConfirmed: boolean;
+}
+
+export type PasswordRecoveryType = {
+    recoveryCode: string | null;
+    expirationDate: Date | null;
+}
 
 export type UserType = {
     login: string,
     email: string,
     password: string,
-    createdAt: string,
-    emailConfirmation: {
-        confirmationCode: string | null;
-        expirationDate: string | null;
-        isConfirmed: boolean;
-    };
+    createdAt: Date,
+    emailConfirmation: EmailConfirmationType;
     passwordRecovery?: PasswordRecoveryType;
 }
 
-export type UserDBType = WithId<UserType>
-
-export type UserViewModel = Omit<UserType, 'password' | 'emailConfirmation'> & {
+export type UserViewType = Omit<UserType, 'password' | 'emailConfirmation'> & {
     id: string,
 }
 
@@ -25,12 +31,12 @@ export type UserInputType = {
     password: string,
 }
 
-export type UsersPaginationViewModel = {
+export type UsersPaginationViewType = {
     pagesCount: number,
     page: number,
     pageSize: number,
     totalCount: number,
-    items: UserViewModel[],
+    items: UserViewType[],
 }
 
 export type QueryUserType = {
@@ -46,7 +52,6 @@ export type URIParamsUserIdType = {
     id: string
 }
 
-export type PasswordRecoveryType = {
-    recoveryCode: string;
-    expirationDate: string;
-}
+export type UserDocument = HydratedDocument<UserType>
+
+export type UserModelType = Model<UserType, {}, {}, {}, UserDocument>

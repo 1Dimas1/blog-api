@@ -5,6 +5,7 @@ import {AuthTestRepository} from "./helpers/auth/auth.test-repository";
 import {UserTestRepository} from "./helpers/users/user.test-repository";
 import {req} from "./helpers/test.helpers";
 import {HTTP_CODES} from "../src/common/http.statuses";
+import mongoose from "mongoose";
 
 describe('auth', () => {
     let authRepository: AuthTestRepository;
@@ -15,6 +16,19 @@ describe('auth', () => {
         userRepository = new UserTestRepository(req);
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204);
     });
+
+    beforeAll(async () => {
+
+        await mongoose.connect(
+            SETTINGS.MONGO_URL!, {
+                dbName: SETTINGS.DB_NAME!
+            }
+        )})
+
+    afterAll(async () => {
+        await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
+        await mongoose.connection.close()
+    })
 
     describe('POST /auth/login', () => {
         let user: UserDto;
@@ -149,7 +163,7 @@ describe('auth', () => {
         });
 
         it('should return 401 with expired token', async () => {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 10000));
             const response = await authRepository.getMe(accessToken);
 
             expect(response.status).toBe(HTTP_CODES.UNAUTHORIZED_401);

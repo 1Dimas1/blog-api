@@ -1,26 +1,26 @@
-import {BlogDBType, BlogInputType, BlogType} from "./blog.type";
-import {blogCollection} from "../../db/db";
-import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
+import {BlogDocument, BlogInputType, BlogType} from "./blog.type";
+import {DeleteResult, UpdateResult} from "mongodb";
 import {injectable} from "inversify";
+import {BlogModel} from "./blog-model";
 
 @injectable()
 export default class BlogsRepository {
-    async findBlogById(id: string): Promise<BlogDBType | null> {
-        return blogCollection.findOne({ _id: new ObjectId(id) });
+    async findBlogById(id: string): Promise<BlogDocument | null> {
+        return BlogModel.findById(id).exec();
     }
 
-    async createBlog(blog: BlogType): Promise<InsertOneResult<BlogDBType>> {
-        return blogCollection.insertOne(blog);
+    async createBlog(blog: BlogType): Promise<BlogDocument> {
+        return BlogModel.insertOne(blog);
     }
 
-    async updateBlog(id: string, blog: BlogInputType): Promise<UpdateResult<BlogDBType>> {
-        return blogCollection.updateOne(
-            { _id: new ObjectId(id) },
-            { $set: blog }
+    async updateBlog(id: string, blog: BlogInputType): Promise<UpdateResult<BlogDocument>> {
+        return BlogModel.updateOne(
+            { _id: id },
+            blog
         );
     }
 
     async deleteBlog(id: string): Promise<DeleteResult> {
-        return blogCollection.deleteOne({ _id: new ObjectId(id) });
+        return BlogModel.deleteOne({ _id: id });
     }
 }

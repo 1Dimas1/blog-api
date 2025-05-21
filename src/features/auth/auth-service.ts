@@ -1,8 +1,7 @@
 import {LoginSuccessDto, LoginUserDto, RegistrationInputDto, UserInfoDto} from "./auth.type";
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {JwtService, RefreshTokenPayload} from "./jwt-service";
-import {WithId} from "mongodb";
-import {UserDBType, UserType} from "../users/user.type";
+import {UserDocument, UserType} from "../users/user.type";
 import UsersRepository from "../users/users-repository";
 import {BcryptService} from "./bcrypt-service";
 import UsersService from "../users/users-service";
@@ -38,10 +37,10 @@ export default class AuthService {
     ) {}
 
 
-    async loginUser(command: LoginUserDto): Promise<Result<LoginSuccessDto | null>> {
-        const result: Result<WithId<UserDBType> | null> = await this.checkUserCredentials(
-            command.loginOrEmail,
-            command.password
+    async loginUser(dto: LoginUserDto): Promise<Result<LoginSuccessDto | null>> {
+        const result: Result<UserDocument | null> = await this.checkUserCredentials(
+            dto.loginOrEmail,
+            dto.password
         );
 
         if (result.status !== ResultStatus.Success) {
@@ -54,14 +53,14 @@ export default class AuthService {
         }
 
         const deviceId: string = await this.securityDevicesService.createUserDevice(
-            result.data!._id.toString(),
-            command.ip || 'unknown',
-            command.userAgent || 'Unknown',
-            new Date(Date.now() + parseInt(process.env.JWT_REFRESH_TIME!)).toISOString()
+            result.data!._id,
+            dto.ip || 'unknown',
+            dto.userAgent || 'Unknown',
+            new Date(Date.now() + parseInt(process.env.JWT_REFRESH_TIME!))
         );
 
-        const accessToken: string = this.jwtService.createAccessToken(result.data!._id.toString());
-        const refreshToken: string = this.jwtService.createRefreshToken(result.data!._id.toString(), deviceId);
+        const accessToken: string = this.jwtService.createAccessToken(result.data!.id);
+        const refreshToken: string = this.jwtService.createRefreshToken(result.data!.id, deviceId);
 
         return {
             status: ResultStatus.Success,
@@ -146,7 +145,7 @@ export default class AuthService {
     }
 
     async registerUser(input: RegistrationInputDto): Promise<Result> {
-        const existingUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(input.login)
+        const existingUser: UserDocument | null = await this.usersRepository.findByLoginOrEmail(input.login)
             || await this.usersRepository.findByLoginOrEmail(input.email);
 
         if (existingUser) {
@@ -176,7 +175,7 @@ export default class AuthService {
     }
 
     async confirmRegistration(code: string): Promise<Result> {
-        const user: UserDBType | null = await this.usersRepository.findByConfirmationCode(code);
+        const user: UserDocument | null = await this.usersRepository.findByConfirmationCode(code);
 
         if (!user) {
             return {
@@ -221,7 +220,7 @@ export default class AuthService {
     }
 
     async resendConfirmationEmail(email: string): Promise<Result> {
-        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
+        const user: UserDocument | null = await this.usersRepository.findByLoginOrEmail(email);
 
         if (!user) {
             return {
@@ -259,7 +258,7 @@ export default class AuthService {
     }
 
     async initiatePasswordRecovery(email: string): Promise<Result> {
-        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
+        const user: UserDocument | null = await this.usersRepository.findByLoginOrEmail(email);
 
         if (user) {
             const recoveryCode: string = uuidv4();
@@ -285,7 +284,7 @@ export default class AuthService {
     }
 
     async setNewPassword(recoveryCode: string, newPassword: string): Promise<Result> {
-        const user: UserDBType | null = await this.usersRepository.findByPasswordRecoveryCode(recoveryCode);
+        const user: UserDocument | null = await this.usersRepository.findByPasswordRecoveryCode(recoveryCode);
 
         if (!user) {
             return {
@@ -325,8 +324,8 @@ export default class AuthService {
     async checkUserCredentials(
         loginOrEmail: string,
         password: string
-    ): Promise<Result<WithId<UserDBType> | null>> {
-        const user: UserDBType | null = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
+    ): Promise<Result<UserDocument | null>> {
+        const user: UserDocument | null = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
 
         if (!user) {
             return {
@@ -359,7 +358,7 @@ export default class AuthService {
     }
 
     async getCurrentUser(userId: string): Promise<Result<UserInfoDto>> {
-        const user: UserDBType | null = await this.usersRepository.findUserById(userId);
+        const user: UserDocument | null = await this.usersRepository.findUserById(userId);
 
         if (!user) {
             return {

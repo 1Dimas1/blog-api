@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.set('trust proxy', true);
 
 app.get('/', (req, res) => {
-    res.status(HTTP_CODES.OK_200).json({version: '9.0'})
+    res.status(HTTP_CODES.OK_200).json({version: '10.0'})
 })
 
 app.use(SETTINGS.PATH.BLOGS,blogsRouter);

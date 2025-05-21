@@ -9,15 +9,30 @@ import {req} from "./helpers/test.helpers";
 import {HTTP_CODES} from "../src/common/http.statuses";
 import {CommentDto, CommentInputDto} from "./helpers/comments/comment.test.type";
 import {commentTestFactory} from "./helpers/comments/comment.test-factory";
+import mongoose from "mongoose";
+import {SETTINGS} from "../src/settings";
 
 describe('Comments', () => {
     let testContext: TestContext;
     let commentRepository: CommentTestRepository;
 
+    beforeAll(async () => {
+
+        await mongoose.connect(
+            SETTINGS.MONGO_URL!, {
+                dbName: SETTINGS.DB_NAME!
+            }
+        )})
+
     beforeEach(async () => {
         commentRepository = new CommentTestRepository(req);
         testContext = await setupTest();
     });
+
+    afterAll(async () => {
+        await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
+        await mongoose.connection.close()
+    })
 
     describe('GET /posts/{postId}/comments', () => {
         it('should return empty array when no comments exist', async () => {

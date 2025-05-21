@@ -4,9 +4,18 @@ import {SETTINGS} from "../src/settings";
 import {userTestFactory} from "./helpers/users/user.test-factory";
 import {UserDto, UsersResponse} from "./helpers/users/user.test.type";
 import {HTTP_CODES} from "../src/common/http.statuses";
+import mongoose from "mongoose";
 
 describe('/users', () => {
     let userRepository: UserTestRepository;
+
+    beforeAll(async () => {
+
+        await mongoose.connect(
+            SETTINGS.MONGO_URL!, {
+                dbName: SETTINGS.DB_NAME!
+            }
+        )})
 
     beforeEach(async () => {
         userRepository = new UserTestRepository(req);
@@ -15,6 +24,7 @@ describe('/users', () => {
 
     afterAll(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204);
+        await mongoose.connection.close();
     });
 
     describe('GET /users', () => {

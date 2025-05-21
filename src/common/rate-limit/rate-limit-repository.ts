@@ -1,14 +1,13 @@
-import {RateLimitType} from "./rate-limit.type";
-import {InsertOneResult} from "mongodb";
-import {rateLimitCollection} from "../../db/db";
+import {RateLimitDocument, RateLimitType} from "./rate-limit.type";
+import {RateLimitModel} from "./rate-limit-model";
 
 export const rateLimitRepository = {
-    async createAttempt(attempt: RateLimitType): Promise<InsertOneResult<RateLimitType>> {
-        return rateLimitCollection.insertOne(attempt);
+    async createAttempt(attempt: RateLimitType): Promise<RateLimitDocument> {
+        return RateLimitModel.insertOne(attempt);
     },
 
     async countAttempts(ip: string, url: string, startDate: Date): Promise<number> {
-        return rateLimitCollection.countDocuments({
+        return RateLimitModel.countDocuments({
             ip,
             url,
             date: { $gte: startDate }
@@ -17,7 +16,7 @@ export const rateLimitRepository = {
 
     async cleanup(): Promise<void> {
         const tenSecondsAgo = new Date(Date.now() - 10000);
-        await rateLimitCollection.deleteMany({
+        await RateLimitModel.deleteMany({
             date: { $lt: tenSecondsAgo }
         });
     }

@@ -1,24 +1,26 @@
-import {ObjectId, SortDirection, WithId} from 'mongodb';
+import {SortDirection} from 'mongodb';
+import mongoose, {HydratedDocument, Model} from "mongoose";
 
 export type CommentInputType = {
     content: string;
 };
 
+export type CommentatorInfoType = {
+    userId: mongoose.Types.ObjectId;
+    userLogin: string;
+}
+
 export type CommentType = {
     content: string;
-    commentatorInfo: {
-        userId: string;
-        userLogin: string;
-    };
-    postId: ObjectId,
-    createdAt: string;
+    commentatorInfo: CommentatorInfoType
+    postId: mongoose.Types.ObjectId;
+    createdAt: Date;
 };
 
-export type CommentViewModel = Omit<CommentType, 'postId'> & {
+export type CommentViewType = Omit<CommentType, "postId" | "commentatorInfo"> & {
     id: string;
+    commentatorInfo: Omit<CommentatorInfoType, "userId"> & { userId: string };
 };
-
-export type CommentDBType = WithId<CommentType>;
 
 export type QueryCommentType = {
     pageNumber: number;
@@ -27,14 +29,18 @@ export type QueryCommentType = {
     sortDirection: SortDirection;
 };
 
-export type CommentPaginatedViewModel = {
+export type CommentPaginatedViewType = {
     pagesCount: number;
     page: number;
     pageSize: number;
     totalCount: number;
-    items: CommentViewModel[];
+    items: CommentViewType[];
 };
 
 export type CommentIdParams = {
     id: string
 }
+
+export type CommentDocument = HydratedDocument<CommentType>
+
+export type CommentModelType = Model<CommentType, {}, {}, {}, CommentDocument>

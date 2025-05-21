@@ -1,6 +1,6 @@
 import {PostTestRepository} from "./helpers/posts/post.test-repository";
 import {BlogTestRepository} from "./helpers/blogs/blog.test-repository";
-import {BlogViewModel} from "../src/features/blogs/blog.type";
+import {BlogViewType} from "../src/features/blogs/blog.type";
 import {createString, req} from "./helpers/test.helpers";
 import {SETTINGS} from "../src/settings";
 import {blogTestFactory} from "./helpers/blogs/blog.test-factory";
@@ -14,11 +14,20 @@ import {
 } from "./helpers/posts/post.test-helpers";
 import {PostDto, PostsResponse} from "./helpers/posts/post.test.type";
 import {HTTP_CODES} from "../src/common/http.statuses";
+import mongoose from "mongoose";
 
 describe('/posts', () => {
     let postRepository: PostTestRepository;
     let blogRepository: BlogTestRepository;
-    let blog: BlogViewModel;
+    let blog: BlogViewType;
+
+    beforeAll(async () => {
+
+        await mongoose.connect(
+            SETTINGS.MONGO_URL!, {
+                dbName: SETTINGS.DB_NAME!
+            }
+        )})
 
     beforeEach(async () => {
         postRepository = new PostTestRepository(req);
@@ -29,6 +38,7 @@ describe('/posts', () => {
 
     afterAll(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204);
+        await mongoose.connection.close();
     });
 
     describe('GET /posts', () => {
@@ -346,6 +356,8 @@ describe('/posts', () => {
         it('should create post for blog', async () => {
             const postInput = postTestFactory.createPostByBlogIdDto();
             const response = await postRepository.createPostByBlogId(blog.id, postInput);
+
+            console.log(response.body)
 
             expect(response.status).toBe(HTTP_CODES.CREATED_201);
             expect(response.body.blogId).toBe(blog.id);

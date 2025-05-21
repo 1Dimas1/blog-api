@@ -1,10 +1,11 @@
-import {DeleteResult, InsertOneResult, ObjectId, UpdateResult} from "mongodb";
-import {PostDBType, PostInputType, PostType, PostViewType} from "./post.type";
+import {DeleteResult, UpdateResult} from "mongodb";
+import {PostDBUpdateType, PostDocument, PostInputType, PostType, PostViewType} from "./post.type";
 import PostsRepository from "./posts-repository";
-import {BlogDBType} from "../blogs/blog.type";
+import {BlogDocument} from "../blogs/blog.type";
 import BlogsRepository from "../blogs/blogs-repository";
 import PostsQueryRepository from "./posts-query-repository";
 import {inject, injectable} from "inversify";
+import mongoose from "mongoose";
 
 @injectable()
 export default class PostsService {
@@ -18,7 +19,7 @@ export default class PostsService {
     ) {}
 
     async createPost(postData: PostInputType): Promise<PostViewType | null> {
-        const postsBlog: BlogDBType | null = await this.blogsRepository.findBlogById(postData.blogId)
+        const postsBlog: BlogDocument | null = await this.blogsRepository.findBlogById(postData.blogId)
         if (!postsBlog) { return null }
 
         const post: PostType = {
@@ -27,20 +28,20 @@ export default class PostsService {
             content: postData.content,
             blogId: postsBlog._id,
             blogName: postsBlog.name,
-            createdAt: new Date().toISOString()
+            createdAt: new Date()
         }
-        const result: InsertOneResult<PostDBType> = await this.postsRepository.createPost(post)
-        return this.postsQueryRepository.findPostById(result.insertedId.toString())
+        const result: PostDocument = await this.postsRepository.createPost(post)
+        return this.postsQueryRepository.findPostById(result.id)
     }
 
     async updatePost(id: string, postData: PostInputType): Promise<boolean> {
-        const post = {
+        const post: PostDBUpdateType = {
             title : postData.title,
             shortDescription : postData.shortDescription,
             content : postData.content,
-            blogId : new ObjectId(postData.blogId)
+            blogId : new mongoose.Types.ObjectId(postData.blogId)
         }
-        const result: UpdateResult<PostDBType> = await this.postsRepository.updatePost(id, post)
+        const result: UpdateResult<PostDocument> = await this.postsRepository.updatePost(id, post)
         return result.matchedCount === 1
     }
 

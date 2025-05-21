@@ -1,13 +1,18 @@
-import {CommentDBType, CommentPaginatedViewModel, CommentViewModel, QueryCommentType} from "./comment.type";
-import {commentCollection} from "../../db/db";
-import {ObjectId} from "mongodb";
+import {
+    CommentDocument,
+    CommentPaginatedViewType,
+    CommentViewType,
+    QueryCommentType
+} from "./comment.type";
 import {injectable} from "inversify";
+import {CommentModel} from "./comment-model";
+import mongoose from "mongoose";
 
 @injectable()
 export default class CommentsQueryRepository {
 
-    async getCommentById(id: string): Promise<CommentViewModel | null> {
-        const comment: CommentDBType | null = await commentCollection.findOne({ _id: new ObjectId(id) });
+    async getCommentById(id: string): Promise<CommentViewType | null> {
+        const comment: CommentDocument | null = await CommentModel.findById(id).exec();
         if (!comment) return null;
         return this._mapToOutput(comment);
     }
@@ -15,17 +20,18 @@ export default class CommentsQueryRepository {
     async getCommentsByPostId(
         postId: string,
         { pageNumber, pageSize, sortBy, sortDirection }: QueryCommentType
-    ): Promise<CommentPaginatedViewModel> {
+    ): Promise<CommentPaginatedViewType> {
         const skip: number = (pageNumber - 1) * pageSize;
 
-        const comments: CommentDBType[] = await commentCollection
-                .find({ postId: new ObjectId(postId) })
+        const comments: CommentDocument[] = await CommentModel
+                .find({ postId: new mongoose.Types.ObjectId(postId) })
                 .sort({ [sortBy]: sortDirection })
                 .skip(skip)
                 .limit(pageSize)
-                .toArray()
+                .exec()
 
-        const totalCount: number = await commentCollection.countDocuments({ postId: new ObjectId(postId) })
+
+        const totalCount: number = await CommentModel.countDocuments({ postId: new mongoose.Types.ObjectId(postId) })
         const pagesCount: number = Math.ceil(totalCount / pageSize);
 
         return {
@@ -37,11 +43,14 @@ export default class CommentsQueryRepository {
         };
     }
 
-    _mapToOutput(comment: CommentDBType): CommentViewModel {
+    _mapToOutput(comment: CommentDocument): CommentViewType {
         return {
             id: comment._id.toString(),
             content: comment.content,
-            commentatorInfo: comment.commentatorInfo,
+            commentatorInfo: {
+                userId: comment.commentatorInfo.userId.toString(),
+                userLogin: comment.commentatorInfo.userLogin
+            },
             createdAt: comment.createdAt
         };
     }

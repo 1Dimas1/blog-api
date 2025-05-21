@@ -10,11 +10,20 @@ import {
     expectValidBlogShape
 } from "./helpers/blogs/blog.test-helpers";
 import {BlogsResponse} from "./helpers/blogs/blog.test.type";
-import {BlogViewModel} from "../src/features/blogs/blog.type";
+import {BlogViewType} from "../src/features/blogs/blog.type";
 import {HTTP_CODES} from "../src/common/http.statuses";
+import mongoose from "mongoose";
 
 describe('/blogs', () => {
     let blogRepository: BlogTestRepository;
+
+    beforeAll(async () => {
+
+        await mongoose.connect(
+            SETTINGS.MONGO_URL!, {
+                dbName: SETTINGS.DB_NAME!
+            }
+    )})
 
     beforeEach(async () => {
         blogRepository = new BlogTestRepository(req);
@@ -23,6 +32,7 @@ describe('/blogs', () => {
 
     afterAll(async () => {
         await req.delete(SETTINGS.PATH.TESTING.concat('/all-data')).expect(HTTP_CODES.NO_CONTENT_204)
+        await mongoose.connection.close()
     })
 
     describe('GET /blogs', () => {
@@ -366,7 +376,7 @@ describe('/blogs', () => {
         });
 
         describe('input validation', () => {
-            let blog: BlogViewModel;
+            let blog: BlogViewType;
 
             beforeEach(async () => {
                 blog = await createTestBlog();

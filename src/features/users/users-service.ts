@@ -1,5 +1,5 @@
-import {DeleteResult, InsertOneResult} from "mongodb";
-import {UserDBType, UserInputType, UserType, UserViewModel} from "./user.type";
+import {DeleteResult} from "mongodb";
+import {UserDocument, UserInputType, UserType, UserViewType} from "./user.type";
 import UsersRepository from "./users-repository";
 import {BcryptService} from "../auth/bcrypt-service";
 import {v4 as uuidv4} from "uuid";
@@ -19,18 +19,10 @@ export default class UsersService {
         private bcryptService: BcryptService,
     ) {}
 
-    async createUser(userData: UserInputType): Promise<UserViewModel | null> {
-        //TODO
-        // const loginUser: UserDBType | null = await usersRepository.findByLoginOrEmail(userData.login);
-        // const emailUser: UserDBType | null = await usersRepository.findByLoginOrEmail(userData.email);
-        //  if (loginUser || emailUser) {
-        //  }
-
-
+    async createUser(userData: UserInputType): Promise<UserViewType | null> {
         const newUser: UserType = await this.createUserEntity(userData)
-
-        const result: InsertOneResult<UserDBType> = await this.usersRepository.createUser(newUser);
-        return this.usersQueryRepository.findUserById(result.insertedId.toString())
+        const result: UserDocument = await this.usersRepository.createUser(newUser);
+        return this.usersQueryRepository.findUserById(result.id)
     }
 
     async deleteUser(id: string): Promise<boolean> {
@@ -39,12 +31,12 @@ export default class UsersService {
     }
 
     async findDuplicateCredential(login: string, email: string): Promise<string | null> {
-        const loginUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(login);
+        const loginUser: UserDocument | null = await this.usersRepository.findByLoginOrEmail(login);
         if (loginUser) {
             return 'login';
         }
 
-        const emailUser: UserDBType | null = await this.usersRepository.findByLoginOrEmail(email);
+        const emailUser: UserDocument | null = await this.usersRepository.findByLoginOrEmail(email);
         if (emailUser) {
             return 'email';
         }
@@ -56,14 +48,14 @@ export default class UsersService {
         input: UserInputType | RegistrationInputDto,
         isConfirmed: boolean = true
     ): Promise<UserType> {
-        const hashedPassword = await this.bcryptService.hashPassword(input.password);
-        const confirmationCode = !isConfirmed ? uuidv4() : null;
+        const hashedPassword: string = await this.bcryptService.hashPassword(input.password);
+        const confirmationCode: string | null = !isConfirmed ? uuidv4() : null;
 
         return {
             login: input.login,
             email: input.email,
             password: hashedPassword,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
             emailConfirmation: {
                 confirmationCode,
                 expirationDate: !isConfirmed ? SETTINGS.EMAIL_CONFIRMATION_CODE_EXP_DATE_24_H : null,

@@ -1,19 +1,20 @@
 import {v4 as uuidv4} from "uuid";
-import {SecurityDeviceType, SecurityDeviceViewModel} from "./security-device.type";
+import {SecurityDeviceDocument, SecurityDeviceType, SecurityDeviceViewModel} from "./security-device.type";
 import SecurityDevicesRepository from "./security-devices.repository";
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {inject, injectable} from "inversify";
+import {Types} from "mongoose";
 
 @injectable()
 export default class SecurityDevicesService {
     constructor(@inject(SecurityDevicesRepository) private securityDevicesRepository: SecurityDevicesRepository) {}
 
-    async createUserDevice(userId: string, ip: string, userAgent: string, expirationDate: string): Promise<string> {
+    async createUserDevice(userId: Types.ObjectId, ip: string, userAgent: string, expirationDate: Date): Promise<string> {
         const deviceId: string = uuidv4();
         const device: SecurityDeviceType = {
             ip,
             title: userAgent || 'Unknown device',
-            lastActiveDate: new Date().toISOString(),
+            lastActiveDate: new Date(),
             deviceId,
             userId,
             expirationDate
@@ -28,7 +29,7 @@ export default class SecurityDevicesService {
     }
 
     async findDevice(userId: string, deviceId: string): Promise<Result<SecurityDeviceType>> {
-        const device: SecurityDeviceType | null = await this.securityDevicesRepository.findDeviceById(deviceId);
+        const device: SecurityDeviceDocument | null = await this.securityDevicesRepository.findDeviceById(deviceId);
 
         if (!device) {
             return {
@@ -38,7 +39,7 @@ export default class SecurityDevicesService {
             };
         }
 
-        if (device.userId !== userId) {
+        if (device.userId.toString() !== userId) {
             return {
                 status: ResultStatus.Forbidden,
                 data: null,
@@ -68,7 +69,7 @@ export default class SecurityDevicesService {
             };
         }
 
-        if (device.userId !== userId) {
+        if (device.userId.toString() !== userId) {
             return {
                 status: ResultStatus.Forbidden,
                 data: null,

@@ -1,7 +1,7 @@
-import {ObjectId, SortDirection} from "mongodb";
-import {UserDBType, UserViewModel} from "./user.type";
-import {userCollection} from "../../db/db";
+import {SortDirection} from "mongodb";
+import {UserDocument, UserViewType} from "./user.type";
 import {injectable} from "inversify";
+import {UserModel} from "./user-model";
 
 @injectable()
 export default class UsersQueryRepository {
@@ -11,28 +11,28 @@ export default class UsersQueryRepository {
         pageNumber: number,
         pageSize: number,
         query: any
-    ): Promise<UserViewModel[]> {
-        const users: UserDBType[] = await userCollection
+    ): Promise<UserViewType[]> {
+        const users: UserDocument[] = await UserModel
             .find(query)
             .sort({[sortBy]: sortDirection})
             .skip((pageNumber - 1) * pageSize)
             .limit(pageSize)
-            .toArray();
+            .exec();
         return users.map(this._mapToOutput)
     }
 
     async getUsersCount(query: any): Promise<number> {
-        return userCollection.countDocuments(query)
+        return UserModel.countDocuments(query)
     }
 
-    async findUserById(id: string): Promise<UserViewModel | null> {
-        const user: UserDBType | null = await userCollection.findOne({_id: new ObjectId(id)});
+    async findUserById(id: string): Promise<UserViewType | null> {
+        const user: UserDocument | null = await UserModel.findById(id);
         return user ? this._mapToOutput(user) : null;
     }
 
-    _mapToOutput(user: UserDBType): UserViewModel {
+    _mapToOutput(user: UserDocument): UserViewType {
         return {
-            id: user._id.toString(),
+            id: user.id.toString(),
             login: user.login,
             email: user.email,
             createdAt: user.createdAt

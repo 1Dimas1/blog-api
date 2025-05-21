@@ -1,5 +1,5 @@
 import {SortDirection} from "mongodb";
-import {UserViewModel, UsersPaginationViewModel} from "./user.type";
+import {UserViewType, UsersPaginationViewType} from "./user.type";
 import {buildFindUsersQuery} from "../../common/helpers/find-query-builders";
 import UsersQueryRepository from "./users-query-repository";
 import {inject, injectable} from "inversify";
@@ -15,10 +15,10 @@ export default class UsersQueryService {
         pageSize: number,
         searchLoginTerm: string | null,
         searchEmailTerm: string | null,
-    ): Promise<UsersPaginationViewModel> {
+    ): Promise<UsersPaginationViewType> {
         const findUsersQuery = buildFindUsersQuery(searchLoginTerm, searchEmailTerm);
 
-        const users: UserViewModel[] = await this.usersQueryRepository.getUsers(
+        const users: UserViewType[] = await this.usersQueryRepository.getUsers(
             sortBy,
             sortDirection,
             pageNumber,

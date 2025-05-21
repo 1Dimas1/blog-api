@@ -1,3 +1,5 @@
+import {HydratedDocument, Model} from "mongoose";
+
 export type LoginSuccessDto = {
     accessToken: string;
     refreshToken: string;
@@ -34,10 +36,6 @@ export type RegistrationEmailResendingDto = {
     email: string;
 };
 
-export type InvalidRefreshTokenType = {
-    token: string;
-    expiredAt: Date;
-}
 
 export type PasswordRecoveryInputDto = {
     email: string;
@@ -47,3 +45,12 @@ export type NewPasswordInputDto = {
     newPassword: string;
     recoveryCode: string;
 };
+
+export type InvalidRefreshTokenType = {
+    token: string;
+    expiredAt: Date;
+}
+
+export type InvalidRefreshTokenDocument = HydratedDocument<InvalidRefreshTokenType>
+
+export type InvalidRefreshTokenModelType = Model<InvalidRefreshTokenType, {}, {}, {}, InvalidRefreshTokenDocument>

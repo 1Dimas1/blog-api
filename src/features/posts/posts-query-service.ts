@@ -1,7 +1,8 @@
 import {ObjectId, SortDirection} from "mongodb";
-import {PostViewType, PostsPaginatedViewModel} from "./post.type";
+import {PostViewType, PostsPaginatedViewType} from "./post.type";
 import PostsQueryRepository from "./posts-query-repository";
 import {inject, injectable} from "inversify";
+import mongoose from "mongoose";
 
 @injectable()
 export default class PostsQueryService {
@@ -13,9 +14,9 @@ export default class PostsQueryService {
         pageNumber: number,
         pageSize: number,
         blogId: string | null = null,
-    ): Promise<PostsPaginatedViewModel> {
+    ): Promise<PostsPaginatedViewType> {
         const search = blogId
-            ? {blogId: new ObjectId(blogId)}
+            ? {blogId: new mongoose.Types.ObjectId(blogId)}
             : {}
         const filter = {
             ...search
