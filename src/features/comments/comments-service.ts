@@ -51,7 +51,7 @@ export default class CommentsService {
         };
 
         const result: CommentDocument = await this.commentsRepository.createComment(newComment);
-        const createdComment: CommentViewType | null = await this.commentsQueryService.getCommentById(result.id);
+        const createdComment: CommentViewType | null = await this.commentsQueryService.getComment(result.id, userId);
 
         return {
             status: ResultStatus.Success,
@@ -65,7 +65,7 @@ export default class CommentsService {
         input: CommentInputType,
         userId: string
     ): Promise<Result> {
-        const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(commentId);
+        const comment: CommentDocument | null = await this.commentsRepository.findComment(commentId);
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,
@@ -77,7 +77,7 @@ export default class CommentsService {
             };
         }
 
-        if (comment.commentatorInfo.userId !== userId) {
+        if (comment.commentatorInfo.userId.toString() !== userId) {
 
             return {
                 status: ResultStatus.Forbidden,
@@ -99,7 +99,7 @@ export default class CommentsService {
     }
 
     async deleteComment(commentId: string, userId: string): Promise<Result> {
-        const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(commentId);
+        const comment: CommentDocument | null = await this.commentsRepository.findComment(commentId);
         if (!comment) {
             return {
                 status: ResultStatus.NotFound,
@@ -111,7 +111,7 @@ export default class CommentsService {
             };
         }
 
-        if (comment.commentatorInfo.userId !== userId) {
+        if (comment.commentatorInfo.userId.toString() !== userId) {
 
             return {
                 status: ResultStatus.Forbidden,

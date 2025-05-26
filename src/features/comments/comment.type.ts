@@ -1,5 +1,6 @@
 import {SortDirection} from 'mongodb';
 import mongoose, {HydratedDocument, Model} from "mongoose";
+import {LikesInfoViewType} from "../likes/like.type";
 
 export type CommentInputType = {
     content: string;
@@ -20,13 +21,15 @@ export type CommentType = {
 export type CommentViewType = Omit<CommentType, "postId" | "commentatorInfo"> & {
     id: string;
     commentatorInfo: Omit<CommentatorInfoType, "userId"> & { userId: string };
+    likesInfo: LikesInfoViewType
 };
 
+
 export type QueryCommentType = {
-    pageNumber: number;
-    pageSize: number;
-    sortBy: string;
-    sortDirection: SortDirection;
+    pageNumber?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortDirection?: SortDirection;
 };
 
 export type CommentPaginatedViewType = {
@@ -44,3 +47,7 @@ export type CommentIdParams = {
 export type CommentDocument = HydratedDocument<CommentType>
 
 export type CommentModelType = Model<CommentType, {}, {}, {}, CommentDocument>
+
+export type CommentAggregatedType = CommentDocument & {
+    likesInfo?: LikesInfoViewType
+}

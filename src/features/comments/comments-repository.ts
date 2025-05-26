@@ -2,9 +2,14 @@ import {DeleteResult, ObjectId, UpdateResult} from "mongodb";
 import {CommentDocument, CommentType} from "./comment.type";
 import {injectable} from "inversify";
 import {CommentModel} from "./comment-model";
+import mongoose from "mongoose";
 
 @injectable()
 export default class CommentsRepository {
+
+    async findComment(id: string): Promise<CommentDocument | null> {
+        return CommentModel.findById(id).exec();
+    }
 
     async createComment(comment: CommentType): Promise<CommentDocument> {
         return CommentModel.insertOne(comment);

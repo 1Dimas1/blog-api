@@ -36,6 +36,8 @@ import {EmailAdapter, IEmailAdapter} from "../common/adapters/email.adapter";
 import {GmailOAuthManager, IOAuthManager} from "../common/managers/gmail.oauth.manager";
 import {EmailManager, IEmailManager} from "../common/managers/email.manager";
 import {EmailTemplateManager, IEmailTemplateManager} from "../common/managers/email-template.manager";
+import LikesService from "../features/likes/likes-service";
+import LikesRepository from "../features/likes/likes-repository";
 
 const container: Container = new Container();
 
@@ -88,5 +90,8 @@ container.bind<IEmailAdapter>(TYPES.IEmailAdapter).to(EmailAdapter).inSingletonS
 container.bind<IOAuthManager>(TYPES.IOAuthManager).to(GmailOAuthManager).inSingletonScope();
 container.bind<IEmailManager>(TYPES.IEmailManager).to(EmailManager).inSingletonScope();
 container.bind<IEmailTemplateManager>(TYPES.IEmailTemplateManager).to(EmailTemplateManager).inSingletonScope();
+
+container.bind<LikesService>(LikesService).toSelf();
+container.bind<LikesRepository>(LikesRepository).toSelf();
 
 export default container;

@@ -10,7 +10,7 @@ import {
 import {errorResultMiddleware} from "../../common/middlewares/errors-result-middleware";
 import {validatePostExistsMiddleware} from "../../common/middlewares/id-params-validation-middleware";
 import CommentsController from "../comments/сomments-controller";
-import {authGuard} from "../auth/auth-middleware";
+import {authGuard, optionalAuthGuard} from "../auth/auth-middleware";
 import container from "../../container/inversify.config";
 
 const postsRouter: Router = Router();
@@ -18,6 +18,7 @@ const postsController: PostsController = container.get<PostsController>(PostsCon
 const commentsController: CommentsController = container.get<CommentsController>(CommentsController);
 
 postsRouter.get('/:id/comments',
+    optionalAuthGuard,
     commentsController.getCommentsByPost.bind(commentsController));
 
 postsRouter.post('/:id/comments',

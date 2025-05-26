@@ -82,3 +82,8 @@ export const commentContentValidator = body('content')
     .isString().notEmpty().trim().withMessage('content is required')
     .isLength({min: 20, max: 300})
     .withMessage('content should contain 20 - 300 symbols')
+
+export const likeStatusValidator = body('likeStatus')
+    .isString().notEmpty().trim().withMessage('content is required')
+    .isIn(["None", "Like", "Dislike"])
+    .withMessage('invalid likeStatus')

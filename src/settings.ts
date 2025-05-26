@@ -11,6 +11,7 @@ export const SETTINGS = {
         COMMENTS: '/comments',
         SECURITY: '/security',
         DEVICES: '/devices',
+        LIKES: '/likes',
         TESTING: '/testing'
     },
     CREDENTIALS: {
@@ -25,7 +26,8 @@ export const SETTINGS = {
     USER_COLLECTION_NAME: 'users',
     COMMENT_COLLECTION_NAME: 'comments',
     INVALID_TOKENS_COLLECTION_NAME : 'invalidTokens',
-    SECURITY_DEVICES_COLLECTION: 'securityDevices',
-    RATE_LIMIT_COLLECTION: 'rateLimit',
+    SECURITY_DEVICES_COLLECTION_NAME: 'securityDevices',
+    RATE_LIMIT_COLLECTION_NAME: 'rateLimit',
+    LIKE_COLLECTION_NAME: 'likes',
     EMAIL_CONFIRMATION_CODE_EXP_DATE_24_H: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 }

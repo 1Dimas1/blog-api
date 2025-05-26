@@ -15,6 +15,8 @@ import CommentsQueryService from "./comments-query-service";
 import {Result, ResultStatus} from "../../common/types/result.type";
 import {resultCodeToHttpException} from "../../common/helpers/result-code.mapper";
 import {inject, injectable} from "inversify";
+import {LikeInputType} from "../likes/like.type";
+import LikesService from "../likes/likes-service";
 
 @injectable()
 export default class CommentsController {
@@ -23,15 +25,22 @@ export default class CommentsController {
         private commentsQueryService: CommentsQueryService,
         @inject(CommentsService)
         private commentsService: CommentsService,
+        @inject(LikesService)
+        private likeService: LikesService
     ) {}
 
     async getCommentsByPost(req: RequestWithParamsAndQuery<PostIdParams, QueryCommentType>, res: Response) {
         try {
             const {postId, sortBy, sortDirection, pageNumber, pageSize} = paginationCommentQueries(req)
+            const userId: string | null = req.userId;
 
-            const comments: CommentPaginatedViewType | null = await this.commentsQueryService.getCommentsByPostId(
+            const comments: CommentPaginatedViewType | null = await this.commentsQueryService.getPostsComments(
                 postId,
-                { pageNumber, pageSize, sortBy, sortDirection }
+                pageNumber,
+                pageSize,
+                sortBy,
+                sortDirection,
+                userId
             );
 
             if (!comments) {
@@ -47,7 +56,8 @@ export default class CommentsController {
 
     async getComment(req: RequestWithParams<CommentIdParams>, res: Response) {
         try {
-            const comment: CommentViewType | null = await this.commentsQueryService.getCommentById(req.params.id);
+            const userId: string | null = req.userId;
+            const comment: CommentViewType | null = await this.commentsQueryService.getComment(req.params.id, userId);
             if (!comment) {
                 res.sendStatus(HTTP_CODES.NOT_FOUND_404);
                 return;
@@ -101,6 +111,25 @@ export default class CommentsController {
         try {
             const result: Result = await this.commentsService.deleteComment(
                 req.params.id,
+                req.userId!
+            );
+
+            if (result.status !== ResultStatus.Success) {
+                res.status(resultCodeToHttpException(result.status)).send(result.extensions);
+                return;
+            }
+
+            res.sendStatus(HTTP_CODES.NO_CONTENT_204);
+        } catch (error) {
+            res.sendStatus(HTTP_CODES.INTERNAL_SERVER_ERROR_500);
+        }
+    }
+
+    async updateCommentLikeStatus(req: RequestWithParamsAndBody<CommentIdParams, LikeInputType>, res: Response){
+        try {
+            const result: Result = await this.likeService.updateCommentLikeStatus(
+                req.params.id,
+                req.body,
                 req.userId!
             );
 
