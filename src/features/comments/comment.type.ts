@@ -48,6 +48,11 @@ export type CommentDocument = HydratedDocument<CommentType>
 
 export type CommentModelType = Model<CommentType, {}, {}, {}, CommentDocument>
 
-export type CommentAggregatedType = CommentDocument & {
-    likesInfo?: LikesInfoViewType
+export type CommentAggregatedDocument = CommentDocument & {
+    likesInfo: LikesInfoViewType
+}
+
+export type CommentPage = {
+    metadata: { totalCount: number }[];
+    data:     CommentAggregatedDocument[];
 }

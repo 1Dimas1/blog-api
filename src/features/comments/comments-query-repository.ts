@@ -1,5 +1,5 @@
 import {
-    CommentAggregatedType,
+    CommentAggregatedDocument, CommentPage,
     CommentPaginatedViewType,
     CommentViewType,
 } from "./comment.type";
@@ -9,6 +9,7 @@ import mongoose, {PipelineStage} from "mongoose";
 import { LikeStatus } from "../likes/like.type";
 import { SETTINGS } from "../../settings";
 import {SortDirection} from "mongodb";
+
 
 @injectable()
 export default class CommentsQueryRepository {
@@ -86,7 +87,7 @@ export default class CommentsQueryRepository {
             }
         ];
 
-        const results  = await CommentModel.aggregate(pipeline).exec();
+        const results: CommentAggregatedDocument[]  = await CommentModel.aggregate<CommentAggregatedDocument>(pipeline).exec();
         if (!results || results.length === 0) return null;
 
         return this._mapAggregateToOutput(results[0]);
@@ -184,22 +185,22 @@ export default class CommentsQueryRepository {
             }
         ];
 
-        const results = await CommentModel.aggregate(pipeline).exec();
+        const results: CommentPage[] = await CommentModel.aggregate<CommentPage>(pipeline).exec();
 
         const totalCount: number = results[0]?.metadata[0]?.totalCount || 0;
         const pagesCount: number = Math.ceil(totalCount / pageSize);
-        const comments: CommentAggregatedType[] = results[0]?.data || [];
+        const comments: CommentAggregatedDocument[] = results[0]?.data || [];
 
         return {
             pagesCount,
             page: pageNumber,
             pageSize,
             totalCount,
-            items: comments.map((comment: CommentAggregatedType): CommentViewType => this._mapAggregateToOutput(comment))
+            items: comments.map((comment: CommentAggregatedDocument): CommentViewType => this._mapAggregateToOutput(comment))
         };
     }
 
-    private _mapAggregateToOutput(comment: CommentAggregatedType): CommentViewType {
+    private _mapAggregateToOutput(comment: CommentAggregatedDocument): CommentViewType {
         return {
             id: comment._id.toString(),
             content: comment.content,
