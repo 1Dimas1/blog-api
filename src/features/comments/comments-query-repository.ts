@@ -27,7 +27,7 @@ export default class CommentsQueryRepository {
                             $match: {
                                 $expr: {
                                     $and: [
-                                        { $eq: ['$parentId', '$commentId'] },
+                                        { $eq: ['$parentId', '$$commentId'] },
                                         { $eq: ['$parentType', 'comment'] }
                                     ]
                                 }
@@ -44,7 +44,7 @@ export default class CommentsQueryRepository {
                             $size: {
                                 $filter: {
                                     input: '$likes',
-                                    cond: { $eq: ['$this.status', LikeStatus.Like] }
+                                    cond: { $eq: ['$$this.status', LikeStatus.Like] }
                                 }
                             }
                         },
@@ -52,7 +52,7 @@ export default class CommentsQueryRepository {
                             $size: {
                                 $filter: {
                                     input: '$likes',
-                                    cond: { $eq: ['$this.status', LikeStatus.Dislike] }
+                                    cond: { $eq: ['$$this.status', LikeStatus.Dislike] }
                                 }
                             }
                         },
@@ -65,11 +65,11 @@ export default class CommentsQueryRepository {
                                                 $filter: {
                                                     input: '$likes',
                                                     cond: userId ? {
-                                                        $eq: ['$this.userId', new mongoose.Types.ObjectId(userId)]
+                                                        $eq: ['$$this.userId', new mongoose.Types.ObjectId(userId)]
                                                     } : { $eq: [1, 0] }
                                                 }
                                             },
-                                            in: '$this.status'
+                                            in: '$$this.status'
                                         }
                                     }
                                 },
@@ -116,7 +116,7 @@ export default class CommentsQueryRepository {
                             $match: {
                                 $expr: {
                                     $and: [
-                                        { $eq: ['$parentId', '$commentId'] },
+                                        { $eq: ['$parentId', '$$commentId'] },
                                         { $eq: ['$parentType', 'comment'] }
                                     ]
                                 }
@@ -133,7 +133,7 @@ export default class CommentsQueryRepository {
                             $size: {
                                 $filter: {
                                     input: '$likes',
-                                    cond: { $eq: ['$this.status', LikeStatus.Like] }
+                                    cond: { $eq: ['$$this.status', LikeStatus.Like] }
                                 }
                             }
                         },
@@ -141,7 +141,7 @@ export default class CommentsQueryRepository {
                             $size: {
                                 $filter: {
                                     input: '$likes',
-                                    cond: { $eq: ['$this.status', LikeStatus.Dislike] }
+                                    cond: { $eq: ['$$this.status', LikeStatus.Dislike] }
                                 }
                             }
                         },
@@ -154,11 +154,11 @@ export default class CommentsQueryRepository {
                                                 $filter: {
                                                     input: '$likes',
                                                     cond: userId ? {
-                                                        $eq: ['$this.userId', new mongoose.Types.ObjectId(userId)]
+                                                        $eq: ['$$this.userId', new mongoose.Types.ObjectId(userId)]
                                                     } : { $eq: [1, 0] }
                                                 }
                                             },
-                                            in: '$this.status'
+                                            in: '$$this.status'
                                         }
                                     }
                                 },
