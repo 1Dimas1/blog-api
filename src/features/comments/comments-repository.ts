@@ -2,7 +2,6 @@ import {DeleteResult, ObjectId, UpdateResult} from "mongodb";
 import {CommentDocument, CommentType} from "./comment.type";
 import {injectable} from "inversify";
 import {CommentModel} from "./comment-model";
-import mongoose from "mongoose";
 
 @injectable()
 export default class CommentsRepository {
