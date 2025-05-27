@@ -1,7 +1,7 @@
 import {injectable} from "inversify";
 import {LikeDocument, LikesInfoType, LikeStatus, LikeType} from "./like.type";
 import {LikeModel} from "./like-model";
-import mongoose from "mongoose";
+import mongoose, {UpdateWriteOpResult} from "mongoose";
 
 @injectable()
 export default class LikesRepository {
@@ -18,8 +18,8 @@ export default class LikesRepository {
         return LikeModel.create(likeData);
     }
 
-    async updateLike(userId: string, parentId: string, parentType: 'comment' | 'post', status: LikeStatus): Promise<void> {
-        await LikeModel.updateOne(
+    async updateLike(userId: string, parentId: string, parentType: 'comment' | 'post', status: LikeStatus): Promise<UpdateWriteOpResult> {
+        return LikeModel.updateOne(
             {
                 userId: new mongoose.Types.ObjectId(userId),
                 parentId: new mongoose.Types.ObjectId(parentId),
